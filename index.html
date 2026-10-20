@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>MKM Luxury KPIs</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f3b57'/><path d='M8 22V12l4 6 4-6v10M20 12v10M20 17l5-5M20 17l5 5' stroke='%23e9c46a' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="logo" aria-hidden="true">M</div>
+    <div>
+      <h1>MKM Luxury · Sales KPIs</h1>
+      <p class="muted" id="syncInfo">Loading data…</p>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="howBtn" type="button">How this works</button>
+    <button class="btn" id="refreshBtn" type="button" title="Reload the latest synced data">Refresh</button>
+    <button class="btn" id="lockBtn" type="button">Unlock contacts</button>
+  </div>
+</header>
+
+<section class="filters" aria-label="Filters">
+  <label>Dates
+    <select id="fDate">
+      <option value="today">Today</option>
+      <option value="yesterday">Yesterday</option>
+      <option value="thisWeek">This week</option>
+      <option value="last7" selected>Last 7 days</option>
+      <option value="last30">Last 30 days</option>
+      <option value="thisMonth">This month</option>
+      <option value="lastMonth">Last month</option>
+      <option value="thisYear">This year</option>
+      <option value="all">All time</option>
+      <option value="custom">Custom…</option>
+    </select>
+  </label>
+  <span id="customWrap" class="custom" hidden>
+    <label>From <input type="date" id="fFrom"></label>
+    <label>To <input type="date" id="fTo"></label>
+  </span>
+  <label>Lead source <select id="fSource"></select></label>
+  <label>Sales rep <select id="fRep"></select></label>
+  <label>Pipeline <select id="fPipe"></select></label>
+  <label class="check"><input type="checkbox" id="fCompare" checked> Compare to previous period</label>
+  <span class="muted small" id="rangeLabel"></span>
+</section>
+
+<main id="main">
+  <div id="warn" class="banner" hidden></div>
+  <div id="rows"></div>
+
+  <section class="card">
+    <div class="card-h"><h2>Funnel</h2><span class="muted small">Leads created in the selected dates, by the furthest stage they reached. Click a bar for the list.</span></div>
+    <div id="funnel" class="funnel"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><h2>Sales rep leaderboard</h2><button class="info-link" data-info="byRep" type="button">How it's counted</button></div>
+    <div class="tablewrap"><table class="grid" id="repTable"></table></div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><h2>Lead sources</h2><button class="info-link" data-info="bySource" type="button">How it's counted</button></div>
+    <div class="tablewrap"><table class="grid" id="srcTable"></table></div>
+  </section>
+
+  <section class="card">
+    <div class="card-h"><h2>New leads</h2><button class="btn small" id="allLeadsBtn" type="button">View all →</button></div>
+    <div class="tablewrap"><table class="grid" id="leadTable"></table></div>
+  </section>
+</main>
+
+<footer class="muted small">Numbers come from GoHighLevel and update every hour. Times shown in the account time zone (<span id="tzName"></span>).</footer>
+
+<!-- generic modal -->
+<dialog id="modal" aria-labelledby="mTitle">
+  <div class="m-head">
+    <div><h2 id="mTitle"></h2><p class="muted small" id="mSub"></p></div>
+    <button class="x" type="button" data-close aria-label="Close">×</button>
+  </div>
+  <div id="mBody"></div>
+</dialog>
+
+<!-- unlock modal -->
+<dialog id="unlock" aria-labelledby="uTitle">
+  <form id="unlockForm" method="dialog" class="unlock">
+    <div class="m-head"><h2 id="uTitle">Unlock contact details</h2><button class="x" type="button" data-close aria-label="Close">×</button></div>
+    <p class="muted">Names, phones and emails are encrypted. Enter the team passphrase to see them. The numbers work without it.</p>
+    <label for="pass">Passphrase</label>
+    <div class="pw">
+      <input id="pass" type="password" autocomplete="current-password" required>
+      <button type="button" id="eye" class="eye" aria-label="Show passphrase" aria-pressed="false" title="Show passphrase">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path id="eyeIcon" d="M12 5C6.5 5 2.7 9.1 1.5 12c1.2 2.9 5 7 10.5 7s9.3-4.1 10.5-7C21.3 9.1 17.5 5 12 5Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" fill="currentColor"/></svg>
+      </button>
+    </div>
+    <label class="check"><input type="checkbox" id="remember" checked> Remember me on this device</label>
+    <p class="muted small">Only tick this on your own computer or phone. Use “Lock” in the header to forget it.</p>
+    <p id="uErr" class="err" role="alert" hidden>That passphrase didn’t work. Check it and try again.</p>
+    <div class="row-end"><button class="btn primary" type="submit" id="unlockGo">Unlock</button></div>
+  </form>
+</dialog>
+
+<script type="module" src="app.mjs"></script>
+</body>
+</html>

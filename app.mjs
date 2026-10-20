@@ -135,7 +135,10 @@ function render() {
   breakdownTable('#srcTable', bySource(P, f), 'Lead source');
 
   const newest = [...cur.tiles.newLeads.rows].sort((a, b) => b.createdAt - a.createdAt);
-  $('#leadTable').innerHTML = newest.length ? listTable('lead', newest.slice(0, 10)) : `<tr><td class="empty">No new leads in these dates.</td></tr>`;
+  $('#leadTable').innerHTML = !newest.length ? `<tr><td class="empty">No new leads in these dates.</td></tr>`
+    : PII ? listTable('lead', newest.slice(0, 10))
+    : `<tr><td class="empty">${newest.length} new lead${newest.length > 1 ? 's' : ''} in these dates. <button class="btn small primary" type="button" id="leadUnlock">🔒 Unlock to see the list</button></td></tr>`;
+  if ($('#leadUnlock')) $('#leadUnlock').onclick = () => openList('New leads', cur.tiles.newLeads);
   $('#allLeadsBtn').onclick = () => openList('New leads', cur.tiles.newLeads);
 }
 
@@ -190,7 +193,9 @@ function listTable(kind, rows) {
 }
 
 let M = null;
+let PENDING = null; // list to open right after a successful unlock
 function openList(title, tile) {
+  if (!PII) { PENDING = [title, tile]; openUnlock('Enter the team passphrase to open this list.'); return; }
   M = { title, tile, kind: tile.kind === 'lead' && false ? 'lead' : tile.kind, q: '', sort: null, dir: 1, page: 0, rep: 'all', src: 'all' };
   const total = tile.rows.length;
   const people = new Set(tile.rows.map(r => r.contactId || r.lead?.contactId)).size;
@@ -217,7 +222,6 @@ function drawList() {
       ${srcs.length ? `<select id="mSrc" aria-label="Filter by source"><option value="all">All sources</option>${srcs.map(r => `<option ${r === M.src ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select>` : ''}
       <span class="muted small">${rows.length} shown</span>
       <button class="btn small" id="mCsv" type="button">Export CSV</button>
-      ${PII ? '' : '<button class="btn small primary" id="mUnlock" type="button">🔒 Unlock to see names</button>'}
     </div>
     <div class="tablewrap"><table class="grid"><thead><tr>${cols.map((c, i) => `<th data-s="${i}" aria-sort="${M.sort === i ? (M.dir > 0 ? 'ascending' : 'descending') : 'none'}">${c[0]}${M.sort === i ? (M.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead>
     <tbody>${pageRows.length ? pageRows.map(r => `<tr>${cols.map(c => `<td>${c[1](r)}</td>`).join('')}</tr>`).join('') : `<tr><td class="empty" colspan="${cols.length}">Nothing to show.</td></tr>`}</tbody></table></div>
@@ -225,7 +229,6 @@ function drawList() {
   const q = $('#mQ'); q.oninput = () => { M.q = q.value; M.page = 0; const pos = q.selectionStart; drawList(); const n = $('#mQ'); n.focus(); n.setSelectionRange(pos, pos); };
   $('#mRep').onchange = e => { M.rep = e.target.value; M.page = 0; drawList(); };
   if ($('#mSrc')) $('#mSrc').onchange = e => { M.src = e.target.value; M.page = 0; drawList(); };
-  if ($('#mUnlock')) $('#mUnlock').onclick = openUnlock;
   $('#mPrev').onclick = () => { M.page--; drawList(); };
   $('#mNext').onclick = () => { M.page++; drawList(); };
   $('#mBody thead').onclick = e => { const th = e.target.closest('[data-s]'); if (!th) return; const i = +th.dataset.s; M.dir = M.sort === i ? -M.dir : 1; M.sort = i; drawList(); };
@@ -261,7 +264,7 @@ function openHow() {
       <li><b>Filters:</b> Lead source, Sales rep and Pipeline apply to every tile, the funnel and the tables.</li>
       <li><b>Compare:</b> the ▲▼ under each number compares to the same length of time just before (green = better).</li>
       <li><b>Click any number</b> to see exactly which leads or calls make it up. The tile number always equals the list length.</li>
-      <li><b>Contact details</b> are encrypted on this public page. Unlock with the team passphrase; tick “Remember me” on your own device so you don’t have to type it every time.</li>
+      <li><b>Lead lists need the passphrase.</b> Anyone with the link sees the numbers; opening a list (names, phones, emails) asks for the team passphrase. Tick “Remember me” on your own device so you don’t have to type it every time, and use Lock to forget it.</li>
       <li><b>Stages:</b> a lead counts toward a stage when it is in that stage or any later one (Engaged → Warm Leads → Perfect Presentation → Under Contract → Closed). GHL only keeps a card’s current stage, so a lead moved back to Long Term Follow Up no longer counts as Warm.</li>
     </ul>
     <h3>Sales reps</h3>${infoBlock('byRep')}
@@ -293,13 +296,15 @@ function lockUi() {
   $('#lockBtn').textContent = PII ? 'Lock' : 'Unlock contacts';
   $('#lockBtn').title = PII ? 'Hide contact details and forget this device' : 'Enter the team passphrase';
 }
-function openUnlock() {
+function openUnlock(msg) {
   const pass = $('#pass');
+  $('#uMsg').textContent = msg || 'Names, phones and emails are encrypted. Enter the team passphrase to see them. The numbers work without it.';
   $('#uErr').hidden = true;
   if (pass.type === 'text') $('#eye').click(); // start hidden, icon in sync
   $('#unlock').showModal(); pass.focus();
 }
 function setupUnlock() {
+  $('#unlock').addEventListener('close', () => { if (!PII) PENDING = null; });
   const eye = $('#eye'), pass = $('#pass');
   eye.onclick = () => {
     const show = pass.type === 'password';
@@ -320,7 +325,7 @@ function setupUnlock() {
       if ($('#remember').checked) store.set('mkm.key', btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw', key)))));
       else store.del('mkm.key');
       pass.value = ''; $('#unlock').close(); lockUi(); render();
-      if ($('#modal').open && M) { $('#mSub').textContent = $('#mSub').textContent.replace(' · contact details locked', ''); drawList(); }
+      if (PENDING) { const [t, tl] = PENDING; PENDING = null; openList(t, tl); }
     } catch { $('#uErr').hidden = false; pass.select(); }
     finally { $('#unlockGo').disabled = false; $('#unlockGo').textContent = 'Unlock'; }
   };

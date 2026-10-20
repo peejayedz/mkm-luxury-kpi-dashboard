@@ -90,7 +90,7 @@
 <dialog id="unlock" aria-labelledby="uTitle">
   <form id="unlockForm" method="dialog" class="unlock">
     <div class="m-head"><h2 id="uTitle">Unlock contact details</h2><button class="x" type="button" data-close aria-label="Close">×</button></div>
-    <p class="muted">Names, phones and emails are encrypted. Enter the team passphrase to see them. The numbers work without it.</p>
+    <p class="muted" id="uMsg">Names, phones and emails are encrypted. Enter the team passphrase to see them. The numbers work without it.</p>
     <label for="pass">Passphrase</label>
     <div class="pw">
       <input id="pass" type="password" autocomplete="current-password" required>
@@ -105,6 +105,6 @@
   </form>
 </dialog>
 
-<script type="module" src="app.mjs"></script>
+<script type="module" src="app.mjs?v=20261020c"></script>
 </body>
 </html>

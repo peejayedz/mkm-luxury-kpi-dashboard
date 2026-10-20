@@ -1,4 +1,5 @@
-import { prepare, computeAll, bySource, byRep, funnel, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs';
+import { CONFIG } from './config.mjs?v=20261020d';
+import { OTHER_REP, prepare, computeAll, bySource, byRep, funnel, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=20261020d';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -95,8 +96,9 @@ function fillSelect(el, opts, val) {
 function setupFilters() {
   $('#fDate').value = st.date;
   st.source = fillSelect($('#fSource'), [['all', 'All sources'], ...sources(P).map(s => [s, s])], st.source);
-  const reps = RAW.users.slice().sort((a, b) => a.name.localeCompare(b.name));
-  st.rep = fillSelect($('#fRep'), [['all', 'All reps'], ...reps.map(u => [u.id, u.name]), ['unassigned', 'Unassigned']], st.rep);
+  const reps = P.users.filter(u => u.id !== OTHER_REP).sort((a, b) => a.name.localeCompare(b.name));
+  const hasOther = P.leads.some(l => l.assignedTo === OTHER_REP) || P.calls.some(c => c.userId === OTHER_REP);
+  st.rep = fillSelect($('#fRep'), [['all', 'All reps'], ...reps.map(u => [u.id, u.name]), ...(hasOther ? [[OTHER_REP, 'Other (admins)']] : []), ['unassigned', 'Unassigned']], st.rep);
   st.pipeline = fillSelect($('#fPipe'), [['all', 'All pipelines'], ...RAW.pipelines.map(p => [p.id, p.name])], st.pipeline);
   $('#fCompare').checked = st.compare;
   const t = todayParts(tz()); const today = `${t.y}-${String(t.m).padStart(2, '0')}-${String(t.d).padStart(2, '0')}`;
@@ -340,7 +342,7 @@ async function load() {
   const res = await fetch('data.json?t=' + Date.now(), { cache: 'no-store' });
   if (!res.ok) throw new Error(res.status === 404 ? 'No data yet — the first sync hasn’t finished. Check back in a few minutes.' : 'Could not load data (' + res.status + ')');
   RAW = await res.json();
-  P = prepare(RAW);
+  P = prepare(RAW, { hiddenReps: CONFIG.hiddenReps });
   const mins = Math.round((Date.now() - RAW.generatedAt) / 60000);
   $('#syncInfo').textContent = `Last synced ${mins < 1 ? 'just now' : mins < 60 ? mins + ' min ago' : fmtDate(RAW.generatedAt, RAW.timezone)} · ${RAW.leads.length} leads in GHL`;
   $('#tzName').textContent = RAW.timezone;

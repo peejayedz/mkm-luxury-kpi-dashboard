@@ -69,7 +69,19 @@ export function stageRank(name) {
 }
 export const RANK_LABEL = { 0: 'New / not engaged', 1: 'Engaged', 2: 'Warm', 3: 'Presentation', 4: 'Under contract', 5: 'Closed', '-1': 'Long-term follow up', '-2': 'Dead / lost' };
 
-export function prepare(data) {
+// Reps hidden from the dashboard (e.g. owners / admins). Their leads and calls still
+// count in every total; on the leaderboard they are grouped as "Other (admins)".
+export const OTHER_REP = '__other';
+export function prepare(data, opts = {}) {
+  const hidden = new Set(opts.hiddenReps || []);
+  if (hidden.size) {
+    const m = id => (id && hidden.has(id) ? OTHER_REP : id);
+    data = { ...data,
+      users: [...data.users.filter(u => !hidden.has(u.id)), { id: OTHER_REP, name: 'Other (admins)', hidden: true }],
+      leads: data.leads.map(l => ({ ...l, assignedTo: m(l.assignedTo), firstDialBy: m(l.firstDialBy) })),
+      calls: (data.calls || []).map(c => ({ ...c, userId: m(c.userId) })),
+      appointments: (data.appointments || []).map(a => ({ ...a, assignedTo: m(a.assignedTo) })) };
+  }
   const stageById = {}, pipeById = {};
   for (const p of data.pipelines) { pipeById[p.id] = p; for (const s of p.stages) stageById[s.id] = { ...s, pipelineId: p.id, pipelineName: p.name, rank: stageRank(s.name) }; }
   const userById = Object.fromEntries(data.users.map(u => [u.id, u]));

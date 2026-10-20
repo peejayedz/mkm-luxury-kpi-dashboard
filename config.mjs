@@ -18,6 +18,9 @@ export const CONFIG = {
     { id: 'mHyQQ2PAwUU1GD8T3APS', name: 'PJ Edrozo' },
     { id: '8dYA5I0AVYBkfOlCvYRb', name: 'Soheela Ahsan' },
   ],
+  // Not sales reps: hidden from the Sales rep filter and leaderboard (PJ Edrozo, Mario Michael).
+  // Anything they own or dial still counts in the totals, shown as "Other (admins)".
+  hiddenReps: ['mHyQQ2PAwUU1GD8T3APS', 'tbRLBAsNTVfjZ2UdHoGR'],
   sourceAliases: {
     'ppc launch': 'PPC Launch',
     'ppc': 'PPC Launch',

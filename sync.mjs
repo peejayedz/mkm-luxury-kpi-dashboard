@@ -43,7 +43,9 @@ const timezone = location.timezone || CONFIG.timezoneFallback;
 
 const pipelines = (await ghl('/opportunities/pipelines', { locationId: LOC })).pipelines || [];
 
-const users = await optional('users', async () => (await ghl('/users/', { locationId: LOC })).users || [], []);
+let users = await optional('users', async () => (await ghl('/users/', { locationId: LOC })).users || [], []);
+if (!users.length) users = CONFIG.knownUsers || [];
+
 
 const opps = [];
 {

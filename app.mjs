@@ -217,6 +217,7 @@ function drawList() {
       ${srcs.length ? `<select id="mSrc" aria-label="Filter by source"><option value="all">All sources</option>${srcs.map(r => `<option ${r === M.src ? 'selected' : ''}>${esc(r)}</option>`).join('')}</select>` : ''}
       <span class="muted small">${rows.length} shown</span>
       <button class="btn small" id="mCsv" type="button">Export CSV</button>
+      ${PII ? '' : '<button class="btn small primary" id="mUnlock" type="button">🔒 Unlock to see names</button>'}
     </div>
     <div class="tablewrap"><table class="grid"><thead><tr>${cols.map((c, i) => `<th data-s="${i}" aria-sort="${M.sort === i ? (M.dir > 0 ? 'ascending' : 'descending') : 'none'}">${c[0]}${M.sort === i ? (M.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}</tr></thead>
     <tbody>${pageRows.length ? pageRows.map(r => `<tr>${cols.map(c => `<td>${c[1](r)}</td>`).join('')}</tr>`).join('') : `<tr><td class="empty" colspan="${cols.length}">Nothing to show.</td></tr>`}</tbody></table></div>
@@ -224,6 +225,7 @@ function drawList() {
   const q = $('#mQ'); q.oninput = () => { M.q = q.value; M.page = 0; const pos = q.selectionStart; drawList(); const n = $('#mQ'); n.focus(); n.setSelectionRange(pos, pos); };
   $('#mRep').onchange = e => { M.rep = e.target.value; M.page = 0; drawList(); };
   if ($('#mSrc')) $('#mSrc').onchange = e => { M.src = e.target.value; M.page = 0; drawList(); };
+  if ($('#mUnlock')) $('#mUnlock').onclick = openUnlock;
   $('#mPrev').onclick = () => { M.page--; drawList(); };
   $('#mNext').onclick = () => { M.page++; drawList(); };
   $('#mBody thead').onclick = e => { const th = e.target.closest('[data-s]'); if (!th) return; const i = +th.dataset.s; M.dir = M.sort === i ? -M.dir : 1; M.sort = i; drawList(); };
@@ -291,6 +293,12 @@ function lockUi() {
   $('#lockBtn').textContent = PII ? 'Lock' : 'Unlock contacts';
   $('#lockBtn').title = PII ? 'Hide contact details and forget this device' : 'Enter the team passphrase';
 }
+function openUnlock() {
+  const pass = $('#pass');
+  $('#uErr').hidden = true;
+  if (pass.type === 'text') $('#eye').click(); // start hidden, icon in sync
+  $('#unlock').showModal(); pass.focus();
+}
 function setupUnlock() {
   const eye = $('#eye'), pass = $('#pass');
   eye.onclick = () => {
@@ -312,12 +320,13 @@ function setupUnlock() {
       if ($('#remember').checked) store.set('mkm.key', btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw', key)))));
       else store.del('mkm.key');
       pass.value = ''; $('#unlock').close(); lockUi(); render();
+      if ($('#modal').open && M) { $('#mSub').textContent = $('#mSub').textContent.replace(' · contact details locked', ''); drawList(); }
     } catch { $('#uErr').hidden = false; pass.select(); }
     finally { $('#unlockGo').disabled = false; $('#unlockGo').textContent = 'Unlock'; }
   };
   $('#lockBtn').onclick = () => {
     if (PII) { PII = null; KEY = null; store.del('mkm.key'); lockUi(); render(); }
-    else { $('#uErr').hidden = true; pass.type = 'password'; $('#unlock').showModal(); pass.focus(); }
+    else openUnlock();
   };
 }
 

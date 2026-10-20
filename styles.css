@@ -164,3 +164,10 @@ dialog{box-shadow:0 24px 90px rgba(0,0,0,.28)}
   label.check{width:100%;margin:2px 0}.tiles{gap:9px}.tile{min-height:112px;padding:12px}.tile .val{font-size:27px}
   .card{padding:13px 12px}.fbar{grid-template-columns:90px minmax(50px,1fr) 74px;gap:8px;font-size:12px}
 }
+
+/* Small alignment fixes on top of the refresh */
+#rangeLabel{align-self:center;margin-bottom:7px}
+@media (max-width:520px){
+  #rangeLabel{margin:0}
+  .actions .btn{white-space:nowrap;font-size:12.5px;padding:7px 6px}
+}

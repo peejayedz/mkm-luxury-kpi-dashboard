@@ -1,5 +1,5 @@
-import { CONFIG } from './config.mjs?v=v2c';
-import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v2c';
+import { CONFIG } from './config.mjs?v=v2d';
+import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v2d';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -14,7 +14,7 @@ const INFO = {
   newLeads: { t: 'New leads', what: 'Leads that came in during the selected dates.', how: 'Count of opportunities whose “Created on” date falls in the range.', src: 'GHL Opportunities.', moves: 'A form, ad lead, mailer call-in, import, MLS offer or a rep adding a lead.' },
   speedToLead: { t: 'Speed to lead', goal: 'Goal: 5 min or less', what: 'Average minutes from when the lead came in to the first call to that lead.', how: 'For each lead: first outbound call time − lead created time. Answered or not, the first dial counts. If the lead called us first and we answered, it counts as 0. Leads not dialled yet are left out of the average and shown at the top of the list.', src: 'GHL call logs.', moves: 'Calling new leads faster. Automated texts don’t count — only a real dial.' },
   within5: { t: 'Called within 5 min', goal: 'Goal: 80%+', what: 'Share of dialled leads that got their first call within 5 minutes.', how: 'Leads with speed to lead ≤ 5 min ÷ leads that have been dialled.', src: 'GHL call logs.', moves: 'Calling every lead within 5 minutes.' },
-  contactRate: { t: 'Contact ratio', goal: 'Goal: 80%+', what: 'Share of new leads we actually reached.', how: 'A lead counts as contacted at the first two-way contact: they replied, a call connected for 60 seconds or more, the card moved to Engaged or later, or an offer was made. Contacted ÷ new leads.', src: 'GHL Conversations + pipeline stage + Offer Script form.', moves: 'Reaching the lead. Our own texts, voicemails and unanswered calls don’t count.' },
+  contactRate: { t: 'Contact ratio', goal: 'Goal: 80%+', what: 'Share of new leads we actually reached.', how: 'A lead counts as contacted at the first two-way contact: they replied, a call connected for 60 seconds or more, they booked an appointment, the card moved to Engaged or later, or an offer was made. Contacted ÷ new leads. Same rule as Premier Builders.', src: 'GHL Conversations + pipeline stage + Offer Script form.', moves: 'Reaching the lead. Our own texts, voicemails and unanswered calls don’t count.' },
   contacted: { t: 'Contacted', what: 'New leads with two-way contact.', how: 'Same rule as Contact ratio, shown as a count.', src: 'GHL Conversations + pipeline stage.', moves: 'A reply, a 60s+ call or an offer.' },
   offers: { t: 'Offers made', what: 'New leads we made an offer to.', how: 'The rep submitted the Offer Script form (tag “offer-made”), or the card reached Perfect Presentation or later. MLS offers logged with the MLS button count here too.', src: 'GHL Offer Script form / tag + pipeline stage.', moves: 'Making offers and logging them with the Offer Script.' },
   contactToOffer: { t: 'Contact → offer', goal: 'Starting goal: 40%', what: 'Of the leads we reached, how many got an offer.', how: 'Offers made ÷ contacted leads.', src: 'GHL.', moves: 'Turning conversations into offers.' },
@@ -181,7 +181,7 @@ function tileHtml(k, t, p) {
     const diff = t.value - p.value;
     if (Math.abs(diff) > 1e-9) {
       const better = t.lowerIsBetter ? diff < 0 : diff > 0;
-      const shown = t.unit === '%' ? `${Math.abs(Math.round(diff * 10) / 10)} pts` : t.unit === '$' ? money(Math.abs(diff)) : t.unit === 'min' ? `${Math.abs(Math.round(diff))} min` : t.unit === 'x' ? Math.abs(Math.round(diff * 10) / 10) : Math.abs(diff);
+      const shown = t.unit === '%' ? `${Math.abs(Math.round(diff * 10) / 10)} pts` : t.unit === '$' ? money(Math.abs(diff)) : t.unit === 'min' ? `${Math.abs(Math.round(diff))} min` : t.unit === 'x' ? Math.abs(Math.round(diff * 10) / 10) : t.unit === 'dur' ? fmtVal({ value: Math.abs(diff), unit: 'dur' }) : t.unit === 'n1' ? Math.abs(Math.round(diff * 10) / 10) : Math.abs(diff);
       delta = `<span class="delta ${better ? 'up' : 'down'}">${diff > 0 ? '▲' : '▼'} ${shown}</span>`;
     } else delta = '<span>no change</span>';
   } else if (p) delta = '<span>—</span>';

@@ -103,6 +103,8 @@ export function prepare(data, opts = {}) {
   const stageById = {}, pipeById = {};
   for (const p of data.pipelines) { pipeById[p.id] = p; for (const s of p.stages) stageById[s.id] = { ...s, pipelineId: p.id, pipelineName: p.name, rank: stageRank(s.name) }; }
   const userById = Object.fromEntries(data.users.map(u => [u.id, u]));
+  // Same rule as Premier Builders: a booked appointment counts as contact.
+  const bookedContacts = new Set((data.appointments || []).filter(a => a.contactId && !/cancel|invalid/.test(a.status || '')).map(a => a.contactId));
   const leads = data.leads.map(l => {
     const st = stageById[l.stageId] || { name: 'Unknown stage', rank: 0 };
     const tags = (l.tags || []).map(t => String(t).toLowerCase());
@@ -115,7 +117,8 @@ export function prepare(data, opts = {}) {
     const pipelineName = pipeById[l.pipelineId]?.name || '';
     const source = l.sourceOverride || canonicalSource(tags, /m.?software/i.test(pipelineName) ? 'M Software' : l.source);
     return { ...l, tags, source, stageName: st.name, pipelineName, rank, won, contract, offered,
-      contacted: !!l.contactedAt || rank >= 1 || offered,
+      contacted: !!l.contactedAt || rank >= 1 || offered || bookedContacts.has(l.contactId),
+      contactMethod: l.contactMethod || (bookedContacts.has(l.contactId) && !l.contactedAt ? 'Booked appointment' : l.contactMethod),
       lost: l.status === 'lost' || l.status === 'abandoned' || rank === -2,
       ownerName: l.assignedTo ? (userById[l.assignedTo]?.name || 'Former user') : 'Unassigned' };
   });

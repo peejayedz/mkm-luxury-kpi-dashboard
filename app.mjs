@@ -1,5 +1,5 @@
-import { CONFIG } from './config.mjs?v=v2b';
-import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v2b';
+import { CONFIG } from './config.mjs?v=v2c';
+import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v2c';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -185,6 +185,7 @@ function tileHtml(k, t, p) {
       delta = `<span class="delta ${better ? 'up' : 'down'}">${diff > 0 ? '▲' : '▼'} ${shown}</span>`;
     } else delta = '<span>no change</span>';
   } else if (p) delta = '<span>—</span>';
+  if ((t.money && (t.locked || t.value == null)) || (t.voice && !RAW.voiceAvailable)) delta = '';
   const sub = t.voice && !RAW.voiceAvailable ? 'Not connected yet' : t.money && !t.locked && t.kind === 'spend' && t.value == null && !t.repFiltered ? 'No spend entered yet' : t.money && t.locked ? 'Passphrase needed' : t.money && t.repFiltered && t.value == null ? 'Not split by rep' : t.den != null ? `${t.num} of ${t.den}` : '';
   return `<div class="tile" role="button" tabindex="0" data-tile="${k}" aria-label="${esc(info.t)}: ${esc(fmtVal(t))}. Open list">
     <button class="i" type="button" data-info="${k}" aria-label="How ${esc(info.t)} works">i</button>

@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>MKM Luxury KPIs</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231f3b57'/><path d='M8 22V12l4 6 4-6v10M20 12v10M20 17l5-5M20 17l5 5' stroke='%23e9c46a' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
-<link rel="stylesheet" href="styles.css?v=20261020b">
+<link rel="stylesheet" href="styles.css?v=v2b">
 </head>
 <body>
 <header class="top">
@@ -20,7 +20,8 @@
   <div class="actions">
     <button class="btn" id="howBtn" type="button">How this works</button>
     <button class="btn" id="refreshBtn" type="button" title="Reload the latest synced data">Refresh</button>
-    <button class="btn" id="lockBtn" type="button">Unlock contacts</button>
+    <a class="btn mls" id="mlsBtn" href="#" target="_blank" rel="noopener" hidden>＋ Log MLS offer</a>
+    <button class="btn" id="lockBtn" type="button">Unlock</button>
   </div>
 </header>
 
@@ -43,15 +44,15 @@
     <label>From <input type="date" id="fFrom"></label>
     <label>To <input type="date" id="fTo"></label>
   </span>
-  <label>Lead source <select id="fSource"></select></label>
   <label>Sales rep <select id="fRep"></select></label>
-  <label>Pipeline <select id="fPipe"></select></label>
   <label class="check"><input type="checkbox" id="fCompare" checked> Compare to previous period</label>
   <span class="muted small" id="rangeLabel"></span>
+  <div class="srcbar" role="group" aria-label="Lead source"><span class="srcbar-lab">Lead source</span><div id="fSource" class="chips"></div></div>
 </section>
 
 <main id="main">
   <div id="warn" class="banner" hidden></div>
+  <p class="scope">Showing: <b id="scopeLabel">Whole company</b></p>
   <div id="rows"></div>
 
   <section class="card">
@@ -59,14 +60,14 @@
     <div id="funnel" class="funnel"></div>
   </section>
 
-  <section class="card">
-    <div class="card-h"><h2>Sales rep leaderboard</h2><button class="info-link" data-info="byRep" type="button">How it's counted</button></div>
-    <div class="tablewrap"><table class="grid" id="repTable"></table></div>
-  </section>
 
   <section class="card">
-    <div class="card-h"><h2>Lead sources</h2><button class="info-link" data-info="bySource" type="button">How it's counted</button></div>
+    <div class="card-h"><h2>Lead source scorecard</h2><span class="muted small">Each source on its own, whole company at the bottom. Click a source name to filter everything to it.</span><button class="info-link" data-info="bySource" type="button">How it's counted</button></div>
     <div class="tablewrap"><table class="grid" id="srcTable"></table></div>
+  </section>
+  <section class="card">
+    <div class="card-h"><h2>Sales rep scorecard</h2><span class="muted small">Outbound activity per rep.</span><button class="info-link" data-info="byRep" type="button">How it's counted</button></div>
+    <div class="tablewrap"><table class="grid" id="repTable"></table></div>
   </section>
 
   <section class="card">
@@ -105,6 +106,6 @@
   </form>
 </dialog>
 
-<script type="module" src="app.mjs?v=20261020d"></script>
+<script type="module" src="app.mjs?v=v2b"></script>
 </body>
 </html>

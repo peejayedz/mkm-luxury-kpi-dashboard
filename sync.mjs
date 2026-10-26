@@ -4,6 +4,7 @@
 import { writeFileSync } from 'node:fs';
 import { webcrypto as crypto } from 'node:crypto';
 import { CONFIG } from './config.mjs';
+import { canonicalSource } from './kpi-core.mjs';
 
 const TOKEN = process.env.GHL_TOKEN;
 const PASS = process.env.DASHBOARD_PASSPHRASE;
@@ -167,8 +168,100 @@ const leads = opps.map(o => {
 const seen = new Set();
 const callList = callsOut.filter(c => (seen.has(c.id) ? false : (seen.add(c.id), true)));
 
-// ---------- encrypt contact details ----------
-const pii = { contacts: {}, opps: {} };
+// ---------- money: Deal Profit field + monthly ad spend sheet ----------
+const oppFields = await optional('opportunity custom fields', async () => {
+  const r = await ghl(`/locations/${LOC}/customFields`, { model: 'opportunity' });
+  return r.customFields || [];
+}, []);
+const profitField = oppFields.find(f => /deal.?profit|^profit$/i.test(f.name || ''));
+const fieldValue = (o, fid) => {
+  const cf = (o.customFields || []).find(c => c.id === fid || c.fieldId === fid);
+  if (!cf) return null;
+  const v = cf.fieldValueNumber ?? cf.fieldValueMonetory ?? cf.fieldValueMonetary ?? cf.fieldValue ?? cf.value ?? cf.fieldValueString;
+  const n = Number(String(v ?? '').replace(/[$,\s]/g, ''));
+  return v === '' || v == null || !Number.isFinite(n) ? null : n;
+};
+const deals = {};
+for (const o of opps) {
+  const profit = profitField ? fieldValue(o, profitField.id) : null;
+  if (profit != null || Number(o.monetaryValue)) deals[o.id] = { profit, value: Number(o.monetaryValue) || null };
+}
+function csvRows(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (ch === '"') q = false; else cell += ch; }
+    else if (ch === '"') q = true; else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim()));
+}
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+function monthKey(v) {
+  const t = String(v || '').trim();
+  let m = t.match(/^(\d{4})-(\d{1,2})/); if (m) return `${m[1]}-${m[2].padStart(2, '0')}`;
+  m = t.match(/^(\d{1,2})\/(\d{1,2})?\/?(\d{4})$/); if (m) return `${m[3]}-${m[1].padStart(2, '0')}`;
+  m = t.toLowerCase().match(/^([a-z]{3})[a-z]*\.?\s+(\d{4})$/); if (m && MONTHS.includes(m[1])) return `${m[2]}-${String(MONTHS.indexOf(m[1]) + 1).padStart(2, '0')}`;
+  return null;
+}
+const spendUrl = (process.env.SPEND_CSV_URL || CONFIG.spendSheetUrl || '').trim()
+  .replace(/\/spreadsheets\/d\/([^/]+)\/edit(?:[^#]*)?(?:#gid=(\d+))?.*$/, (_, id, gid) => `/spreadsheets/d/${id}/export?format=csv${gid ? `&gid=${gid}` : ''}`);
+const spend = [];
+if (spendUrl) await optional('ad spend sheet', async () => {
+  const res = await fetch(spendUrl, { redirect: 'follow' });
+  if (!res.ok) throw new Error(`sheet returned ${res.status} — share it as "Anyone with the link can view"`);
+  const rows = csvRows(await res.text());
+  const head = rows.shift().map(h => h.toLowerCase());
+  const iM = head.findIndex(h => /month/.test(h)), iS = head.findIndex(h => /source/.test(h)), iA = head.findIndex(h => /amount|spend|budget/.test(h));
+  for (const r of rows) {
+    const month = monthKey(r[iM]), source = canonicalSource([], r[iS] || ''), amount = Number(String(r[iA] || '').replace(/[$,\s]/g, ''));
+    if (month && source !== 'Unknown' && Number.isFinite(amount)) spend.push({ month, source, amount });
+    else if (r.some(c => c.trim())) warnings.push(`ad spend sheet: skipped row "${r.join(', ')}"`);
+  }
+});
+
+// ---------- Voice AI call logs ----------
+let voiceAvailable = true;
+const agents = await optional('voice AI agents', async () => {
+  const r = await ghl('/voice-ai/agents', { locationId: LOC, page: 1, pageSize: 50 }, '2021-04-15');
+  return r.agents || r.data || [];
+}, []);
+const agentName = Object.fromEntries(agents.map(a => [a.id || a._id, a.agentName || a.name || '']));
+const voiceLogs = await optional('voice AI call logs', async () => {
+  const all = [];
+  for (let page = 1; page <= 40; page++) {
+    const r = await ghl('/voice-ai/dashboard/call-logs', { locationId: LOC, page, pageSize: 50, timezone: timezone }, '2021-04-15');
+    const list = r.callLogs || r.data || r.logs || [];
+    all.push(...list);
+    if (list.length < 50) break;
+  }
+  return all;
+}, null);
+if (voiceLogs === null) voiceAvailable = false;
+const voiceCalls = [];
+const voicePii = {};
+for (const v of voiceLogs || []) {
+  if (v.trialCall) continue;
+  const acts = v.executedCallActions || [];
+  const kind = a => `${a.actionType || ''} ${a.actionName || ''}`;
+  voiceCalls.push({
+    id: v.id || v._id, contactId: v.contactId || null, at: ts(v.createdAt), duration: Math.round(Number(v.duration) || 0),
+    agentName: agentName[v.agentId] || (v.isAgentDeleted ? 'Deleted agent' : ''),
+    transferred: acts.some(a => /transfer/i.test(kind(a))), booked: acts.some(a => /appoint|book|calendar/i.test(kind(a))),
+    actions: acts.map(a => a.actionName || a.actionType).filter(Boolean),
+  });
+  if (v.summary) voicePii[v.id || v._id] = String(v.summary).slice(0, 600);
+  if (v.contactId && !contacts[v.contactId]) {
+    contacts[v.contactId] = await optional(`voice contact ${v.contactId}`, async () => (await ghl(`/contacts/${v.contactId}`)).contact || {}, {});
+    if (!contacts[v.contactId].phone && v.fromNumber) contacts[v.contactId].phone = v.fromNumber;
+    contactIds.push(v.contactId);
+  }
+}
+
+// ---------- encrypt contact details, money and AI call summaries ----------
+const pii = { contacts: {}, opps: {}, money: { deals, spend }, voice: voicePii };
 for (const o of opps) pii.opps[o.id] = o.name || '';
 for (const id of contactIds) {
   const c = contacts[id] || {};
@@ -200,8 +293,12 @@ const out = {
   leads,
   calls: callList,
   appointments,
+  voiceCalls,
+  voiceAvailable,
+  hasProfitField: !!profitField,
+  hasSpendSheet: !!spendUrl,
   warnings,
-  pii: { v: 1, salt: b64(salt), iv: b64(iv), ct: b64(ct), iterations: CONFIG.kdfIterations },
+  pii: { v: 2, salt: b64(salt), iv: b64(iv), ct: b64(ct), iterations: CONFIG.kdfIterations },
 };
 writeFileSync('data.json', JSON.stringify(out));
-console.log(`wrote data.json: ${leads.length} leads, ${callList.length} calls, ${appointments.length} appointments, ${users.length} users, ${warnings.length} warnings, ${calls} API calls`);
+console.log(`wrote data.json: ${leads.length} leads, ${callList.length} calls, ${appointments.length} appointments, ${voiceCalls.length} AI calls, ${spend.length} spend rows, profit field ${profitField ? 'found' : 'missing'}, ${users.length} users, ${warnings.length} warnings, ${calls} API calls`);

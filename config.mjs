@@ -21,6 +21,10 @@ export const CONFIG = {
   // Not sales reps: hidden from the Sales rep filter and leaderboard (PJ Edrozo, Mario Michael).
   // Anything they own or dial still counts in the totals, shown as "Other (admins)".
   hiddenReps: ['mHyQQ2PAwUU1GD8T3APS', 'tbRLBAsNTVfjZ2UdHoGR'],
+  // Monthly ad spend sheet (Month | Lead source | Amount). Read by the sync; linked from the Ad spend list.
+  spendSheetUrl: '',
+  // GHL form for logging an MLS offer by hand. Shows the "+ Log MLS offer" button when set.
+  mlsOfferFormUrl: '',
   sourceAliases: {
     'ppc launch': 'PPC Launch',
     'ppc': 'PPC Launch',

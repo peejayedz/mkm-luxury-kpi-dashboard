@@ -220,7 +220,9 @@ if (spendUrl) await optional('ad spend sheet', async () => {
   const head = rows.shift().map(h => h.toLowerCase());
   const iM = head.findIndex(h => /month/.test(h)), iS = head.findIndex(h => /source/.test(h)), iA = head.findIndex(h => /amount|spend|budget/.test(h));
   for (const r of rows) {
-    const month = monthKey(r[iM]), source = canonicalSource([], r[iS] || ''), amount = Number(String(r[iA] || '').replace(/[$,\s]/g, ''));
+    const rawAmount = String(r[iA] ?? '').replace(/[$,\s]/g, '');
+    if (rawAmount === '') continue; // month/source typed but spend not filled in yet: not a $0 month
+    const month = monthKey(r[iM]), source = canonicalSource([], r[iS] || ''), amount = Number(rawAmount);
     if (month && source !== 'Unknown' && Number.isFinite(amount)) spend.push({ month, source, amount });
     else if (r.some(c => c.trim())) warnings.push(`ad spend sheet: skipped row "${r.join(', ')}"`);
   }

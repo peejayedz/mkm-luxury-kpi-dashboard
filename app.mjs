@@ -1,5 +1,5 @@
-import { CONFIG } from './config.mjs?v=v3b';
-import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v3b';
+import { CONFIG } from './config.mjs?v=v3c';
+import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, executiveSummary, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v3c';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -18,6 +18,7 @@ const INFO = {
   afterLeads: { t: 'After-hours leads', what: 'New leads that came in outside business hours (nights, weekends).', how: 'New leads created outside Mon–Fri 9 AM–6 PM Eastern.', src: 'GHL Opportunities.', moves: 'Ads, mailers and the Voice AI working while the team is off.' },
   afterSpeed: { t: 'After-hours speed to lead', what: 'How fast after-hours leads were called once Ann was back at work.', how: 'For leads that came in outside business hours: minutes from the start of Ann’s next working hour (Mon–Fri 9 AM–6 PM Eastern) to the first outbound call. E.g. Saturday 2 PM lead, called Monday 9:20 AM = 20 min. Called before the office opened = 0. The lead list also shows the real wait.', goal: 'Goal: under 5 min', src: 'GHL call logs.', moves: 'Calling after-hours leads first thing in the morning, or the Voice AI transferring / booking them.' },
   afterContactRate: { t: 'After-hours contact ratio', what: 'Share of after-hours leads we reached.', how: 'Contacted ÷ after-hours leads, same contact rule as the main contact ratio.', src: 'GHL Conversations + stage.', moves: 'Getting hold of after-hours leads quickly.' },
+  notCalled: { t: 'Not called yet', what: 'New leads that haven’t had an outbound call yet.', how: 'New leads in these dates with no outbound call logged, leaving out leads that booked a call first.', src: 'GHL call logs.', moves: 'Calling every new lead.' },
   excluded: { t: 'Not counted', what: 'Calls and leads left out of every lead number: spam, not a seller, repeat callers.', how: 'Leads tagged spam / not-a-seller / repeat-caller, plus any later lead for a contact who already came in before (they count once).', src: 'GHL tags + opportunities.', moves: 'Tagging spam and non-sellers (the Voice AI will do this on the PPC and mailer numbers).' },
   contacted: { t: 'Contacted', what: 'New leads with two-way contact.', how: 'Same rule as Contact ratio, shown as a count.', src: 'GHL Conversations + pipeline stage.', moves: 'A reply, a 60s+ call or an offer.' },
   offers: { t: 'Offers made', what: 'New leads we made an offer to.', how: 'The rep submitted the Offer Script form (tag “offer-made”), or the card reached Perfect Presentation or later. MLS offers logged with the MLS button count here too.', src: 'GHL Offer Script form / tag + pipeline stage.', moves: 'Making offers and logging them with the Offer Script.' },
@@ -165,6 +166,7 @@ function render() {
   $('#rows').innerHTML = rows.map(([title, keys, isMoney]) => `<section class="row${isMoney === 'voice' ? ' voice' : ''}"><h3>${esc(title)}${isMoney === 'voice' ? voiceNote : ''}${isMoney === true && !PII ? ' <button class="info-link" type="button" data-unlock-money>🔒 Unlock to see ad spend</button>' : ''}${isMoney === true && PII && st.rep !== 'all' ? ' <span class="muted small">· spend isn’t split by rep</span>' : ''}</h3><div class="tiles">${keys.map(k => tileHtml(k, cur.tiles[k], prev?.tiles[k])).join('')}</div></section>`).join('');
 
   const fun = funnel(P, f, tz()), top = Math.max(1, fun[0][1].value);
+  renderSummary(cur.tiles, fun);
   $('#funnel').innerHTML = fun.map(([lab, t], i) => `<button class="fbar" type="button" data-funnel="${i}"><span>${esc(lab)}</span><span class="track"><span class="fill" style="width:${(t.value / top) * 100}%"></span></span><span class="n">${t.value}${i ? ` · ${fun[0][1].value ? Math.round((t.value / fun[0][1].value) * 100) : 0}%` : ''}</span></button>`).join('');
   $('#funnel').onclick = e => { const b = e.target.closest('[data-funnel]'); if (b) { const [lab, t] = fun[+b.dataset.funnel]; openList(lab, t); } };
 
@@ -177,6 +179,30 @@ function render() {
     : `<tr><td class="empty">${newest.length} new lead${newest.length > 1 ? 's' : ''} in these dates. <button class="btn small primary" type="button" id="leadUnlock">🔒 Unlock to see the list</button></td></tr>`;
   if ($('#leadUnlock')) $('#leadUnlock').onclick = () => openList('New leads', cur.tiles.newLeads);
   $('#allLeadsBtn').onclick = () => openList('New leads', cur.tiles.newLeads);
+}
+
+// ---------- executive summary ----------
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+function spendMissingNote() {
+  if (st.rep !== 'all' || !['all', 'PPC', 'Mailers', 'M Software'].includes(st.source)) return null;
+  if (!RAW.hasSpendSheet) return 'No monthly ad spend has been entered yet, so cost per lead and ROAS are blank.';
+  if (!P.money) return null; // locked: can't see the sheet rows
+  const t = todayParts(tz()); const y = t.m === 1 ? t.y - 1 : t.y, m = t.m === 1 ? 12 : t.m - 1;
+  const key = `${y}-${String(m).padStart(2, '0')}`;
+  const need = st.source === 'all' ? ['PPC', 'Mailers', 'M Software'] : [st.source];
+  const missing = need.filter(src => !(P.money.spend || []).some(r => r.month === key && r.source === src));
+  return missing.length ? `${MONTHS[m - 1]} ad spend hasn’t been entered for ${missing.join(', ')} yet.` : null;
+}
+function renderSummary(tiles, fun) {
+  const repName = st.rep !== 'all' ? (P.userById[st.rep]?.name || '').split(' ')[0] || 'the rep' : (CONFIG.mainRepName || 'the team');
+  const S = executiveSummary(tiles, fun, { repName, spendMissing: spendMissingNote() });
+  const sel = $('#fDate'); const when = st.date === 'custom' ? $('#rangeLabel').textContent : sel.selectedOptions[0]?.text || '';
+  const item = it => it.tile ? `<li><a href="#" role="button" class="ex-link" data-tile="${it.tile}">${esc(it.text)}</a></li>`
+    : it.funnel != null ? `<li><a href="#" role="button" class="ex-link" data-exfunnel="${it.funnel}">${esc(it.text)}</a></li>` : `<li>${esc(it.text)}</li>`;
+  const col = (cls, title, items, empty) => `<div class="ex-col"><h3><span class="ex-dot ${cls}" aria-hidden="true"></span>${title}</h3><ul>${items.length ? items.map(item).join('') : `<li class="muted">${empty}</li>`}</ul></div>`;
+  $('#execSum').innerHTML = `<div class="ex-head"><h2>Executive summary</h2><span class="muted small">· ${esc(when)}${st.source !== 'all' ? ' · ' + esc(st.source) : ''}${st.rep !== 'all' ? ' · ' + esc(repName) : ''}</span></div>
+    <div class="ex-grid">${col('good', 'What’s going well', S.good, 'Nothing to call out yet in these dates.')}${col('bad', 'Needs attention', S.attention, 'Nothing needs attention. Every goal is met.')}${col('focus', 'Recommended focus', S.focus.map(text => ({ text })), '')}</div>`;
+  $('#execSum').onclick = e => { if (e.target.closest('a.ex-link')) e.preventDefault(); const b = e.target.closest('[data-exfunnel]'); if (b) { const [lab, t] = fun[+b.dataset.exfunnel]; openList(lab, t); } };
 }
 
 function tileHtml(k, t, p) {
@@ -327,6 +353,7 @@ function openHow() {
       <li><b>Compare:</b> the ▲▼ under each number compares to the same length of time just before (green = better).</li>
       <li><b>Click any number</b> to see exactly which leads or calls make it up. The tile number always equals the list length.</li>
       <li><b>Ad spend, ROAS and lead lists need the passphrase.</b> Anyone with the link sees the lead numbers; spend, profit, ROAS and the lists (names, phones, emails) ask for the team passphrase. Tick “Remember me” on your own device so you don’t have to type it every time, and use Lock to forget it.</li>
+      <li><b>Executive summary:</b> the box at the top checks every card that has a goal for the dates, source and rep you picked. Cards meeting their goal go under “What’s going well”, cards missing it under “Needs attention” (with leads not called yet, leads missing a source tag and missing monthly ad spend), and “Recommended focus” gives the top actions. Click a line to open its list.</li>
       <li><b>What counts as a lead:</b> a new seller, counted once. Spam, non-sellers and repeat callers are left out of every lead number and listed under “Not counted” so you can check them.</li>
       <li><b>Speed to lead:</b> measured in business hours (Mon–Fri 9 AM–6 PM Eastern), so nights and weekends don’t count against the rep. After-hours leads also get their own row: their speed to lead counts from Ann’s next working hour, plus their contact ratio. Leads that booked a call before anyone dialled are judged on show / no-show instead.</li>
       <li><b>Funnel:</b> New lead → Contacted → Offer made → Under contract → Purchased. A lead counts toward a step when it reached that step or any later one.</li>

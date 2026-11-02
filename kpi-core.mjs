@@ -296,6 +296,7 @@ export function computeAll(P, f, tz = P.timezone) {
     afterSpeed: { value: avg(afterDialed.map(l => l.stlBiz)), unit: 'min', rows: [...after].sort((a, b) => (b.stlBiz ?? 1e12) - (a.stlBiz ?? 1e12)), kind: 'stl', lowerIsBetter: true },
     afterContactRate: { value: pct(afterContacted.length, after.length), unit: '%', rows: after, kind: 'contact', num: afterContacted.length, den: after.length },
     excluded: { value: excludedRows.length, rows: excludedRows, kind: 'excluded' },
+    notCalled: { value: notDialed.length, rows: notDialed, kind: 'stl' },
     within5: { value: pct(within5.length, dialed.length), unit: '%', rows: dialed, kind: 'stl', num: within5.length, den: dialed.length },
     contactRate: { value: pct(contacted.length, cohort.length), unit: '%', rows: cohort, kind: 'contact', num: contacted.length, den: cohort.length },
     contacted: { value: contacted.length, rows: contacted, kind: 'contact' },
@@ -353,3 +354,58 @@ export function funnel(P, f, tz) {
   return [['New leads', t.newLeads], ['Contacted', t.contacted], ['Offer made', t.offers], ['Under contract', t.contracts], ['Purchased', t.purchased]];
 }
 export const sources = P => [...SOURCES, ...(P.leads.some(l => l.source === 'Unknown') ? ['Unknown'] : [])];
+
+// ---------- executive summary (What's going well / Needs attention / Recommended focus) ----------
+// Pure rules over the tiles, so the summary always matches the cards. Each item can point at a tile
+// (clicking it opens that tile's list).
+export const SUMMARY_GOALS = [
+  { k: 'speedToLead', label: 'Speed to lead', goal: 5, lower: true, unit: 'min', focus: 'Call every new lead within 5 minutes during business hours; turn on an instant new-lead alert for {rep}.' },
+  { k: 'within5', label: 'Called within 5 min', goal: 80, unit: '%', focus: 'Call every new lead within 5 minutes during business hours; turn on an instant new-lead alert for {rep}.' },
+  { k: 'contactRate', label: 'Contact ratio', goal: 80, unit: '%', focus: 'Keep following up until each lead is reached: call, text, and call again the same day.' },
+  { k: 'afterSpeed', label: 'After-hours speed to lead', goal: 5, lower: true, unit: 'min', focus: 'Call after-hours leads first thing at 9 AM, or let the Voice AI transfer or book them.' },
+  { k: 'missedRate', label: 'Missed call rate', goal: 10, lower: true, unit: '%', focus: 'Answer or return every inbound call fast; a missed call is a lost seller.' },
+  { k: 'contactToOffer', label: 'Contact → offer', goal: 40, unit: '%', focus: 'Make an offer to every qualified seller you talk to, and tag it offer-made.' },
+  { k: 'offerToContract', label: 'Offer → contract', goal: 25, unit: '%', focus: 'Follow up on every open offer within 24 hours to get it under contract.' },
+  { k: 'contractToPurchase', label: 'Contract → purchase', goal: 70, unit: '%', focus: 'Review contracts that haven’t closed and clear what’s blocking each one.' },
+];
+const fmtN = (v, unit) => unit === '%' ? `${Math.round(v * 10) / 10}%` : unit === 'min' ? (v >= 2880 ? `${Math.round(v / 144) / 10} days` : v >= 120 ? `${Math.round(v / 6) / 10} hr` : `${v < 10 ? Math.round(v * 10) / 10 : Math.round(v)} min`) : String(v);
+const goalTxt = g => g.lower ? `≤ ${g.goal}${g.unit === '%' ? '%' : ' min'}` : `${g.goal}%`;
+export function executiveSummary(tiles, fun, ctx = {}) {
+  const rep = ctx.repName || 'the team';
+  const good = [], perf = [], data = [], focus = [];
+  const addFocus = s => { const t = s.replace('{rep}', rep); if (!focus.includes(t)) focus.push(t); };
+  // biggest drop-off between funnel steps (needs at least 2 leads at the earlier step); in this funnel each
+  // step after Contacted is also a goal card, so it's marked on that card's line instead of repeated.
+  const STEP_KEYS = [null, null, 'contactToOffer', 'offerToContract', 'contractToPurchase'];
+  let worst = null;
+  for (let i = 1; i < fun.length - 1; i++) {
+    const a = fun[i][1].value, b = fun[i + 1][1].value;
+    if (a >= 2 && b / a < 0.5 && (!worst || b / a < worst.r)) worst = { r: b / a, k: STEP_KEYS[i + 1] };
+  }
+  if (!tiles.newLeads.value) {
+    perf.push({ text: 'No new leads came in during these dates.', tile: 'newLeads' });
+    addFocus('Check lead flow: every new seller who calls in should get an opportunity in the Seller Leads pipeline.');
+  }
+  const nc = tiles.notCalled?.value || 0;
+  if (nc) {
+    perf.push({ text: nc > 1 ? `${nc} new leads haven’t been called yet.` : '1 new lead hasn’t been called yet.', tile: 'notCalled' });
+    addFocus(nc > 1 ? `Call the ${nc} new leads that haven’t been called yet.` : 'Call the new lead that hasn’t been called yet.');
+  }
+  for (const g of SUMMARY_GOALS) {
+    const t = tiles[g.k];
+    if (!t || t.value == null || (t.den != null && t.den === 0)) continue;
+    const counts = t.den != null ? ` (${t.num} of ${t.den})` : '';
+    const ok = g.lower ? t.value <= g.goal : t.value >= g.goal;
+    const well = g.lower ? t.value <= g.goal / 2 : t.value >= g.goal * 1.2;
+    if (ok) good.push({ text: `${g.label} is ${fmtN(t.value, g.unit)}${counts}, ${well ? 'well ahead of' : 'on target for'} the ${goalTxt(g)} goal.`, tile: g.k });
+    else { perf.push({ text: `${g.label} is ${fmtN(t.value, g.unit)}${counts} vs the ${goalTxt(g)} goal.${worst?.k === g.k ? ' This is the biggest drop-off in the funnel.' : ''}`, tile: g.k }); addFocus(g.focus); }
+  }
+  if (tiles.excluded?.value) good.push({ text: `${tiles.excluded.value} junk or repeat call${tiles.excluded.value > 1 ? 's were' : ' was'} kept out of the numbers.`, tile: 'excluded' });
+  const unknown = (tiles.newLeads.rows || []).filter(l => l.source === 'Unknown').length;
+  if (unknown) { data.push({ text: unknown > 1 ? `${unknown} leads have no source tag, so they don’t show under any lead source.` : '1 lead has no source tag, so it doesn’t show under any lead source.', tile: 'newLeads' }); addFocus('Tag every new lead with its source (ppc, mailers, mls, drive by, referral, outbound, m software).'); }
+  if (ctx.spendMissing) { data.push({ text: ctx.spendMissing }); addFocus('Ann: add each month’s spend for PPC, Mailers and M Software so cost per lead and ROAS fill in.'); }
+  if (!focus.length) focus.push('Keep it up: hold speed to lead under 5 minutes and keep making offers.');
+  const MAX = 5, extra = Math.max(0, perf.length - MAX);
+  const attention = [...perf.slice(0, MAX), ...(extra ? [{ text: `…and ${extra} more card${extra > 1 ? 's' : ''} below goal (see below).`, more: true }] : []), ...data];
+  return { good, attention, focus: focus.slice(0, 3) };
+}

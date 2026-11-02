@@ -191,3 +191,23 @@ table.grid tr.picked td{background:color-mix(in srgb,var(--brand) 9%,transparent
 #srcTable th:first-child,#srcTable td:first-child{position:sticky;left:0;background:var(--card);z-index:1}
 table.grid tr.total td:first-child{background:color-mix(in srgb,var(--accent) 7%,var(--card))}
 .row.voice h3::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:7px;vertical-align:1px}
+
+/* Hover summary on each KPI card */
+.kpi-tip{position:absolute;z-index:50;width:min(340px,calc(100vw - 24px));background:var(--card);color:var(--ink);border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));border-radius:10px;padding:11px 13px;box-shadow:0 12px 32px rgba(0,0,0,.22);font-size:12.5px;line-height:1.45;pointer-events:none}
+.kpi-tip p{margin:0 0 6px}
+.kpi-tip .tip-title{font-weight:650;font-size:13.5px}
+.kpi-tip .tip-how{color:var(--ink)}
+.kpi-tip .tip-goal,.kpi-tip .tip-counts{color:var(--muted)}
+.kpi-tip .tip-foot{margin:8px 0 0;padding-top:7px;border-top:1px solid var(--line);color:var(--muted);font-size:11.5px}
+@media (prefers-reduced-motion:no-preference){.kpi-tip:not([hidden]){animation:tipIn .12s ease-out}@keyframes tipIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}}
+
+/* What's new */
+.news-btn { position: relative; }
+.news-dot { position: absolute; top: 5px; right: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--card, #fff); }
+.news-dot[hidden] { display: none; }
+.news .news-entry { padding: 4px 0 14px; border-bottom: 1px solid rgba(127,127,127,.18); margin-bottom: 12px; }
+.news .news-entry:last-child { border-bottom: 0; margin-bottom: 0; }
+.news .news-entry h3 { margin: 0 0 2px; display: flex; align-items: center; gap: 8px; }
+.news .news-entry p { margin: 0 0 8px; }
+.news ul { margin: 0; padding-left: 20px; }
+.news li { margin: 4px 0; }

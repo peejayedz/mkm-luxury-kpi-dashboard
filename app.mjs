@@ -1,5 +1,5 @@
-import { CONFIG } from './config.mjs?v=v2d';
-import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v2d';
+import { CONFIG } from './config.mjs?v=v3b';
+import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v3b';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -11,10 +11,14 @@ const store = {
 
 // ---------- KPI explanations (tile ⓘ and the "How this works" popup) ----------
 const INFO = {
-  newLeads: { t: 'New leads', what: 'Leads that came in during the selected dates.', how: 'Count of opportunities whose “Created on” date falls in the range.', src: 'GHL Opportunities.', moves: 'A form, ad lead, mailer call-in, import, MLS offer or a rep adding a lead.' },
-  speedToLead: { t: 'Speed to lead', goal: 'Goal: 5 min or less', what: 'Average minutes from when the lead came in to the first call to that lead.', how: 'For each lead: first outbound call time − lead created time. Answered or not, the first dial counts. If the lead called us first and we answered, it counts as 0. Leads not dialled yet are left out of the average and shown at the top of the list.', src: 'GHL call logs.', moves: 'Calling new leads faster. Automated texts don’t count — only a real dial.' },
-  within5: { t: 'Called within 5 min', goal: 'Goal: 80%+', what: 'Share of dialled leads that got their first call within 5 minutes.', how: 'Leads with speed to lead ≤ 5 min ÷ leads that have been dialled.', src: 'GHL call logs.', moves: 'Calling every lead within 5 minutes.' },
-  contactRate: { t: 'Contact ratio', goal: 'Goal: 80%+', what: 'Share of new leads we actually reached.', how: 'A lead counts as contacted at the first two-way contact: they replied, a call connected for 60 seconds or more, they booked an appointment, the card moved to Engaged or later, or an offer was made. Contacted ÷ new leads. Same rule as Premier Builders.', src: 'GHL Conversations + pipeline stage + Offer Script form.', moves: 'Reaching the lead. Our own texts, voicemails and unanswered calls don’t count.' },
+  newLeads: { t: 'New leads', what: 'New sellers who came in during the selected dates.', how: 'Opportunities created in the dates, counting each contact only the first time. Leads tagged spam / not-a-seller, and repeat callers, are left out and listed under “Not counted”.', src: 'GHL Opportunities + tags.', moves: 'A new seller from a form, ad, mailer call, MLS offer or a rep adding a lead.' },
+  speedToLead: { t: 'Speed to lead', goal: 'Goal: 5 min or less (business hours)', what: 'How fast a new lead gets its first call, counting business hours only (Mon–Fri 9 AM–6 PM Eastern).', how: 'Business-hours minutes from lead created to the first outbound call. Nights and weekends don’t count: a Sunday lead called at 9:04 Monday = 4 min. A lead that booked a call before anyone dialled is judged on show / no-show instead, so it’s left out. If the lead called us and we answered, it counts as 0.', src: 'GHL call logs + calendar.', moves: 'Calling new leads fast during working hours. Texts don’t count — only a real dial.' },
+  within5: { t: 'Called within 5 min', goal: 'Goal: 80%+', what: 'Share of dialled leads that got their first call within 5 business-hours minutes.', how: 'Leads with speed to lead ≤ 5 business-hours minutes ÷ leads dialled.', src: 'GHL call logs.', moves: 'Calling every lead within 5 minutes during working hours.' },
+  contactRate: { t: 'Contact ratio', goal: 'Goal: 80%+', what: 'Share of new leads we actually reached.', how: 'A lead counts as contacted at the first two-way contact: they replied, a call connected for 60 seconds or more, they booked an appointment, the card moved to Engaged or later, or an offer was made. Contacted ÷ new leads. Same rule as Premier Builders.', src: 'GHL Conversations + pipeline stage.', moves: 'Reaching the lead. Our own texts, voicemails and unanswered calls don’t count.' },
+  afterLeads: { t: 'After-hours leads', what: 'New leads that came in outside business hours (nights, weekends).', how: 'New leads created outside Mon–Fri 9 AM–6 PM Eastern.', src: 'GHL Opportunities.', moves: 'Ads, mailers and the Voice AI working while the team is off.' },
+  afterSpeed: { t: 'After-hours speed to lead', what: 'How fast after-hours leads were called once Ann was back at work.', how: 'For leads that came in outside business hours: minutes from the start of Ann’s next working hour (Mon–Fri 9 AM–6 PM Eastern) to the first outbound call. E.g. Saturday 2 PM lead, called Monday 9:20 AM = 20 min. Called before the office opened = 0. The lead list also shows the real wait.', goal: 'Goal: under 5 min', src: 'GHL call logs.', moves: 'Calling after-hours leads first thing in the morning, or the Voice AI transferring / booking them.' },
+  afterContactRate: { t: 'After-hours contact ratio', what: 'Share of after-hours leads we reached.', how: 'Contacted ÷ after-hours leads, same contact rule as the main contact ratio.', src: 'GHL Conversations + stage.', moves: 'Getting hold of after-hours leads quickly.' },
+  excluded: { t: 'Not counted', what: 'Calls and leads left out of every lead number: spam, not a seller, repeat callers.', how: 'Leads tagged spam / not-a-seller / repeat-caller, plus any later lead for a contact who already came in before (they count once).', src: 'GHL tags + opportunities.', moves: 'Tagging spam and non-sellers (the Voice AI will do this on the PPC and mailer numbers).' },
   contacted: { t: 'Contacted', what: 'New leads with two-way contact.', how: 'Same rule as Contact ratio, shown as a count.', src: 'GHL Conversations + pipeline stage.', moves: 'A reply, a 60s+ call or an offer.' },
   offers: { t: 'Offers made', what: 'New leads we made an offer to.', how: 'The rep submitted the Offer Script form (tag “offer-made”), or the card reached Perfect Presentation or later. MLS offers logged with the MLS button count here too.', src: 'GHL Offer Script form / tag + pipeline stage.', moves: 'Making offers and logging them with the Offer Script.' },
   contactToOffer: { t: 'Contact → offer', goal: 'Starting goal: 40%', what: 'Of the leads we reached, how many got an offer.', how: 'Offers made ÷ contacted leads.', src: 'GHL.', moves: 'Turning conversations into offers.' },
@@ -51,8 +55,9 @@ const INFO = {
 
 const ROWS = [
   ['Leads in', ['newLeads', 'speedToLead', 'within5', 'contactRate']],
+  ['After hours & lead quality', ['afterLeads', 'afterSpeed', 'afterContactRate', 'excluded']],
   ['Deal funnel', ['offers', 'contactToOffer', 'offerToContract', 'contractToPurchase']],
-  ['Money', ['adSpend', 'costPerLead', 'costPerAcq', 'roas'], true],
+  ['Ad spend & ROAS', ['adSpend', 'costPerLead', 'costPerAcq', 'roas'], true],
   ['Results', ['contracts', 'purchased', 'totalProfit', 'profitPerDeal']],
   ['Activity & health', ['dials', 'dialsPerLead', 'missedRate', 'dead']],
   ['Voice AI', ['aiCalls', 'aiAvgDuration', 'aiTotalTime', 'aiCallers', 'aiBecameLead', 'aiBooked', 'aiTransferred', 'aiShort'], 'voice'],
@@ -72,7 +77,7 @@ function fmtVal(t) {
   if (t.unit === 'n1') return (Math.round(t.value * 10) / 10).toLocaleString('en-US');
   if (t.unit === '%') return (Math.round(t.value * 10) / 10) + '%';
   if (t.unit === '$') return money(t.value);
-  if (t.unit === 'min') return (t.value < 10 ? (Math.round(t.value * 10) / 10) : Math.round(t.value)) + ' min';
+  if (t.unit === 'min') return t.value >= 2880 ? (Math.round(t.value / 144) / 10) + ' days' : t.value >= 120 ? (Math.round(t.value / 6) / 10) + ' hr' : (t.value < 10 ? (Math.round(t.value * 10) / 10) : Math.round(t.value)) + ' min';
   if (t.unit === 'x') return (Math.round(t.value * 10) / 10) + '×';
   return t.value.toLocaleString('en-US');
 }
@@ -157,7 +162,7 @@ function render() {
   $('#scopeLabel').textContent = scope;
   if ((RAW.calendars || []).length) rows.splice(rows.findIndex(r => r[0] === 'Activity & health') + 1, 0, ['Appointments', ['booked', 'showRate']]);
   const voiceNote = !RAW.voiceAvailable ? ' <span class="muted small">· needs the Voice AI permission on the GHL token</span>' : st.rep !== 'all' ? ' <span class="muted small">· AI calls aren’t tied to a rep, so this shows all of them</span>' : st.source !== 'all' ? ' <span class="muted small">· calls from callers with a ' + esc(st.source) + ' lead</span>' : '';
-  $('#rows').innerHTML = rows.map(([title, keys, isMoney]) => `<section class="row${isMoney === 'voice' ? ' voice' : ''}"><h3>${esc(title)}${isMoney === 'voice' ? voiceNote : ''}${isMoney === true && !PII ? ' <button class="info-link" type="button" data-unlock-money>🔒 Unlock to see money</button>' : ''}${isMoney === true && PII && st.rep !== 'all' ? ' <span class="muted small">· spend isn’t split by rep</span>' : ''}</h3><div class="tiles">${keys.map(k => tileHtml(k, cur.tiles[k], prev?.tiles[k])).join('')}</div></section>`).join('');
+  $('#rows').innerHTML = rows.map(([title, keys, isMoney]) => `<section class="row${isMoney === 'voice' ? ' voice' : ''}"><h3>${esc(title)}${isMoney === 'voice' ? voiceNote : ''}${isMoney === true && !PII ? ' <button class="info-link" type="button" data-unlock-money>🔒 Unlock to see ad spend</button>' : ''}${isMoney === true && PII && st.rep !== 'all' ? ' <span class="muted small">· spend isn’t split by rep</span>' : ''}</h3><div class="tiles">${keys.map(k => tileHtml(k, cur.tiles[k], prev?.tiles[k])).join('')}</div></section>`).join('');
 
   const fun = funnel(P, f, tz()), top = Math.max(1, fun[0][1].value);
   $('#funnel').innerHTML = fun.map(([lab, t], i) => `<button class="fbar" type="button" data-funnel="${i}"><span>${esc(lab)}</span><span class="track"><span class="fill" style="width:${(t.value / top) * 100}%"></span></span><span class="n">${t.value}${i ? ` · ${fun[0][1].value ? Math.round((t.value / fun[0][1].value) * 100) : 0}%` : ''}</span></button>`).join('');
@@ -209,11 +214,12 @@ function scoreTable(sel, rows, first, cols, isSource) {
 // ---------- list modal ----------
 const COLS = {
   lead: [['Name', nameCell, plainName], ['Phone', phone], ['Email', email], ['Source', r => esc(r.source), r => r.source], ['Created', r => d(r.createdAt), r => r.createdAt], ['Rep', r => esc(r.ownerName), r => r.ownerName], ['Stage', r => esc(r.stageName), r => r.rank], ['Status', r => statusChip(r), r => r.status]],
-  stl: [['Name', nameCell, plainName], ['Phone', phone], ['Created', r => d(r.createdAt), r => r.createdAt], ['First dial', r => r.firstDialAt ? d(r.firstDialAt) : '<span class="chip bad">Not called yet</span>', r => r.firstDialAt || 0], ['Speed to lead', r => r.speedToLeadMin == null ? '—' : `<span class="chip ${r.speedToLeadMin <= 5 ? 'good' : 'bad'}">${dur(r.speedToLeadMin)}</span>`, r => r.speedToLeadMin ?? 1e12], ['Dials', r => r.dialCount || 0, r => r.dialCount || 0], ['Rep', r => esc(r.ownerName), r => r.ownerName]],
+  stl: [['Name', nameCell, plainName], ['Phone', phone], ['Created', r => d(r.createdAt), r => r.createdAt], ['Came in', r => r.bookedFirst ? '<span class="chip">Booked a call first</span>' : r.afterHours ? '<span class="chip">After hours</span>' : 'Business hours', r => (r.bookedFirst ? 2 : r.afterHours ? 1 : 0)], ['First dial', r => r.firstDialAt ? d(r.firstDialAt) : r.bookedFirst ? '' : '<span class="chip bad">Not called yet</span>', r => r.firstDialAt || 0], ['Speed to lead (business hrs)', r => r.stlBiz == null ? '—' : `<span class="chip ${r.stlBiz <= 5 ? 'good' : 'bad'}">${dur(r.stlBiz)}</span>`, r => r.stlBiz ?? 1e12], ['Real wait', r => r.stlRaw == null ? '—' : dur(r.stlRaw), r => r.stlRaw ?? 1e12], ['Dials', r => r.dialCount || 0, r => r.dialCount || 0], ['Rep', r => esc(r.ownerName), r => r.ownerName]],
   contact: [['Name', nameCell, plainName], ['Phone', phone], ['Email', email], ['Contacted at', r => r.contactedAt ? d(r.contactedAt) : '', r => r.contactedAt || 0], ['Method', r => esc(r.contactMethod || (r.rank >= 1 || r.won ? 'Stage moved' : '')), r => r.contactMethod || ''], ['Rep', r => esc(r.ownerName), r => r.ownerName], ['Response', r => respChip(r), r => respText(r)]],
-  deal: [['Name', nameCell, plainName], ['Phone', phone], ['Source', r => esc(r.source), r => r.source], ['Stage', r => esc(r.stageName), r => r.rank], ['Offer', r => r.offered ? '<span class="chip good">Yes</span>' : '', r => r.offered ? 1 : 0], ['Profit', r => r.profit == null ? (r.won ? '<span class="chip bad">Not entered</span>' : '') : money(r.profit), r => r.profit ?? -1], ['Rep', r => esc(r.ownerName), r => r.ownerName], ['Date in stage', r => d(r.statusChangedAt || r.stageChangedAt), r => r.statusChangedAt || r.stageChangedAt]],
+  deal: [['Name', nameCell, plainName], ['Phone', phone], ['Source', r => esc(r.source), r => r.source], ['Stage', r => esc(r.stageName), r => r.rank], ['Offer', r => r.offerAmount != null ? money(r.offerAmount) : r.offered ? '<span class="chip good">Yes</span>' : '', r => r.offerAmount ?? (r.offered ? 0 : -1)], ['Profit', r => r.profit == null ? (r.won ? '<span class="chip bad">Not entered</span>' : '') : money(r.profit), r => r.profit ?? -1], ['Rep', r => esc(r.ownerName), r => r.ownerName], ['Date in stage', r => d(r.statusChangedAt || r.stageChangedAt), r => r.statusChangedAt || r.stageChangedAt]],
   call: [['Name', nameCell, plainName], ['Phone', phone], ['Called at', r => d(r.at), r => r.at], ['Made by', r => esc(r.userName), r => r.userName], ['Result', r => esc(r.status || ''), r => r.status], ['Duration', r => r.duration ? `${Math.floor(r.duration / 60)}:${String(r.duration % 60).padStart(2, '0')}` : '0:00', r => r.duration], ['Lead stage', r => esc(r.lead?.stageName || ''), r => r.lead?.rank ?? -9]],
   missed: [['Name', nameCell, plainName], ['Phone', phone], ['Missed at', r => d(r.at), r => r.at], ['Called back?', r => r.callbackAt ? '<span class="chip good">Yes</span>' : '<span class="chip bad">No</span>', r => r.callbackAt ? 1 : 0], ['Callback at', r => r.callbackAt ? d(r.callbackAt) : '', r => r.callbackAt || 0], ['Callback wait', r => dur(r.callbackMin), r => r.callbackMin ?? 1e12], ['Lead stage', r => esc(r.lead?.stageName || ''), r => r.lead?.rank ?? -9], ['Rep', r => esc(r.lead?.ownerName || ''), r => r.lead?.ownerName || '']],
+  excluded: [['Name', nameCell, plainName], ['Phone', phone], ['Why not counted', r => `<span class="chip">${esc(r.excluded)}</span>`, r => r.excluded], ['Source', r => esc(r.source), r => r.source], ['Created', r => d(r.createdAt), r => r.createdAt], ['Rep', r => esc(r.ownerName), r => r.ownerName], ['Stage', r => esc(r.stageName), r => r.rank]],
   voice: [['Caller', nameCell, plainName], ['Phone', r => { const p = person(r.contactId); return p ? (p.phone ? esc(p.phone) : esc(r.fromNumber || '')) : '•••'; }], ['Called at', r => d(r.at), r => r.at], ['Agent', r => esc(r.agentName || ''), r => r.agentName || ''], ['Length', r => fmtVal({ value: r.duration || 0, unit: 'dur' }), r => r.duration || 0], ['Actions', r => [r.transferred ? '<span class="chip">Transferred</span>' : '', r.booked ? '<span class="chip good">Booked</span>' : ''].join(' ') || '', r => (r.transferred ? 1 : 0) + (r.booked ? 2 : 0)], ['New lead?', r => r.becameLead ? '<span class="chip good">Yes</span>' : '', r => r.becameLead ? 1 : 0], ['Lead source', r => esc(r.source || ''), r => r.source || ''], ['Summary', r => esc(PII?.voice?.[r.id] || ''), r => PII?.voice?.[r.id] || '']],
   appt: [['Name', nameCell, plainName], ['Phone', phone], ['Calendar', r => esc(r.calendarName), r => r.calendarName], ['Appointment', r => d(new Date(r.startTime).getTime()), r => new Date(r.startTime).getTime()], ['Booked on', r => d(new Date(r.createdAt).getTime()), r => new Date(r.createdAt).getTime()], ['Status', r => esc(r.status), r => r.status], ['Rep', r => esc(r.userName), r => r.userName]],
 };
@@ -316,14 +322,16 @@ function openHow() {
     <ul>
       <li><b>Where the numbers come from:</b> GoHighLevel (MKM Luxury). A sync runs every hour and reads opportunities, contacts, users, calls and calendars. Nothing is changed in GHL.</li>
       <li><b>Dates:</b> every lead number uses the date the lead was <i>created</i>, so the rates line up (e.g. contact rate = contacted ÷ new leads from the same dates). Calls use the call date. Times are in the account’s time zone (${esc(RAW?.timezone || '')}).</li>
-      <li><b>Whole company or one source:</b> “All sources” shows the whole company. Click PPC, Mailers, M Software, Outbound, MLS, Referral or Drive By to see every number for just that source. The scorecard at the bottom shows all sources side by side.</li>
+      <li><b>Whole company or one source:</b> “All sources” shows the whole company. Click PPC, Mailers, M Software, Outbound, MLS, Referral or Drive By to see every number for just that source. A lead’s source comes from its source tag first, then the phone line the seller called (PPC line 561-461-2261, Mailer line 689-329-1441), then the GHL source field. The scorecard at the bottom shows all sources side by side.</li>
       <li><b>Sales rep:</b> pick a rep to see their dials, contacts, offers and deals. Spend isn’t split by rep.</li>
       <li><b>Compare:</b> the ▲▼ under each number compares to the same length of time just before (green = better).</li>
       <li><b>Click any number</b> to see exactly which leads or calls make it up. The tile number always equals the list length.</li>
-      <li><b>Money and lead lists need the passphrase.</b> Anyone with the link sees the lead numbers; spend, profit, ROAS and the lists (names, phones, emails) ask for the team passphrase. Tick “Remember me” on your own device so you don’t have to type it every time, and use Lock to forget it.</li>
+      <li><b>Ad spend, ROAS and lead lists need the passphrase.</b> Anyone with the link sees the lead numbers; spend, profit, ROAS and the lists (names, phones, emails) ask for the team passphrase. Tick “Remember me” on your own device so you don’t have to type it every time, and use Lock to forget it.</li>
+      <li><b>What counts as a lead:</b> a new seller, counted once. Spam, non-sellers and repeat callers are left out of every lead number and listed under “Not counted” so you can check them.</li>
+      <li><b>Speed to lead:</b> measured in business hours (Mon–Fri 9 AM–6 PM Eastern), so nights and weekends don’t count against the rep. After-hours leads also get their own row: their speed to lead counts from Ann’s next working hour, plus their contact ratio. Leads that booked a call before anyone dialled are judged on show / no-show instead.</li>
       <li><b>Funnel:</b> New lead → Contacted → Offer made → Under contract → Purchased. A lead counts toward a step when it reached that step or any later one.</li>
       <li><b>Voice AI:</b> read from GHL’s Voice AI call log (agent ${esc([...new Set((P?.voice || []).map(v => v.agentName).filter(Boolean))].join(', ') || 'not connected')}). Calls count on the call date; a call counts toward a lead source when the caller has a lead from that source.</li>
-      <li><b>Money:</b> spend comes from the monthly ad spend sheet; profit from the “Deal Profit” field on each purchased deal. Cost per lead = spend ÷ leads, cost per acquisition = spend ÷ deals, ROAS = profit ÷ spend.</li>
+      <li><b>Ad spend &amp; ROAS:</b> spend comes from the monthly ad spend sheet; profit from the “Deal Profit” field on each purchased deal. Cost per lead = spend ÷ leads, cost per acquisition = spend ÷ deals, ROAS = profit ÷ spend.</li>
     </ul>
     <h3>Lead source scorecard</h3>${infoBlock('bySource')}
     <h3>Sales rep scorecard</h3>${infoBlock('byRep')}
@@ -394,6 +402,68 @@ function setupUnlock() {
   };
 }
 
+// ---------- hover summary on each card ----------
+// Hover (or keyboard focus) on a card shows a short "what it is / how it's counted" summary.
+function setupHoverTips() {
+  const tip = document.createElement('div');
+  tip.id = 'kpiTip'; tip.className = 'kpi-tip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true;
+  document.body.appendChild(tip);
+  let timer = null, current = null;
+  let pendingRef = () => {};
+  const hide = () => { clearTimeout(timer); timer = null; pendingRef(); if (current) current.removeAttribute('aria-describedby'); current = null; tip.hidden = true; };
+  const show = tile => {
+    const k = tile.dataset.tile, i = INFO[k]; if (!i) return;
+    const t = CUR?.cur?.tiles?.[k];
+    const counts = t && t.den != null && !(t.money && t.locked) ? `<p class="tip-counts">Right now: ${esc(t.num)} of ${esc(t.den)}</p>` : '';
+    tip.innerHTML = `<p class="tip-title">${esc(i.t)}</p><p>${esc(i.what)}</p><p class="tip-how"><b>How it’s counted:</b> ${esc(i.how)}</p>${i.goal ? `<p class="tip-goal">${esc(i.goal)}</p>` : ''}${counts}<p class="tip-foot">Click the card for the list · ⓘ for the full explanation</p>`;
+    tip.hidden = false;
+    const r = tile.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight, gap = 8, pad = 12;
+    let top = r.bottom + gap; if (top + h > window.innerHeight - pad && r.top - gap - h > pad) top = r.top - gap - h;
+    let left = Math.min(Math.max(pad, r.left + r.width / 2 - w / 2), window.innerWidth - w - pad);
+    tip.style.top = `${Math.round(top + window.scrollY)}px`; tip.style.left = `${Math.round(left + window.scrollX)}px`;
+    tile.setAttribute('aria-describedby', 'kpiTip'); current = tile;
+  };
+  const canHover = window.matchMedia?.('(hover: hover)').matches;
+  let pending = null; pendingRef = () => { pending = null; };
+  const onMove = e => {
+    if (!canHover) return;
+    const tile = e.target.closest?.('[data-tile]');
+    if (!tile || e.target.closest('.i')) { hide(); pending = null; return; }
+    if (tile === current || tile === pending) return; // already showing / about to show
+    hide(); pending = tile; timer = setTimeout(() => { pending = null; show(tile); }, 250);
+  };
+  document.addEventListener('mouseover', onMove);
+  document.addEventListener('mousemove', onMove); // re-shows after a scroll hid it
+  document.addEventListener('mouseout', e => { const tile = e.target.closest?.('[data-tile]'); if (tile && !tile.contains(e.relatedTarget)) hide(); });
+  document.addEventListener('focusin', e => { const tile = e.target.closest?.('[data-tile]'); if (tile && e.target === tile) show(tile); });
+  document.addEventListener('focusout', e => { if (e.target.closest?.('[data-tile]')) hide(); });
+  document.addEventListener('click', hide, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+  window.addEventListener('resize', hide);
+}
+
+// ---------- What's new (changelog.json — only edited when PJ says "update the change log") ----------
+let NEWS = [];
+const NEWS_KEY = 'mkm-kpi-news-seen';
+const newsId = e => e ? `${e.date}|${e.title}` : '';
+async function loadNews() {
+  try {
+    const j = window.__MKM_CHANGELOG__ || await (await fetch('changelog.json?t=' + Date.now(), { cache: 'no-store' })).json();
+    NEWS = (j.entries || []).filter(e => e && e.date).sort((a, b) => b.date.localeCompare(a.date));
+  } catch { NEWS = []; }
+  $('#newsBtn').hidden = !NEWS.length;
+  $('#newsDot').hidden = !NEWS.length || store.get(NEWS_KEY) === newsId(NEWS[0]);
+}
+const newsDate = s => new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(s + 'T12:00:00Z'));
+function openNews() {
+  $('#mTitle').textContent = 'What’s new';
+  $('#mSub').textContent = NEWS.length ? `Latest update deployed ${newsDate(NEWS[0].date)}` : '';
+  $('#mBody').innerHTML = `<div class="help news">${NEWS.map((e, i) => `<section class="news-entry"><h3>${i === 0 ? '<span class="chip good">Latest</span> ' : ''}${esc(e.title)}</h3><p class="muted small">${esc(newsDate(e.date))}</p><ul>${(e.items || []).map(t => `<li>${esc(t)}</li>`).join('')}</ul></section>`).join('')}</div>`;
+  if (NEWS.length) store.set(NEWS_KEY, newsId(NEWS[0]));
+  $('#newsDot').hidden = true;
+  $('#modal').showModal();
+}
+
 // ---------- boot ----------
 async function load() {
   if (window.__MKM_DATA__) RAW = window.__MKM_DATA__;
@@ -402,7 +472,7 @@ async function load() {
     if (!res.ok) throw new Error(res.status === 404 ? 'No data yet — the first sync hasn’t finished. Check back in a few minutes.' : 'Could not load data (' + res.status + ')');
     RAW = await res.json();
   }
-  P = prepare(RAW, { hiddenReps: CONFIG.hiddenReps });
+  P = prepare(RAW, { hiddenReps: CONFIG.hiddenReps, businessHours: CONFIG.businessHours, excludeTags: CONFIG.excludeTags });
   if (PII) attachMoney(P, PII.money || null);
   const mins = Math.round((Date.now() - RAW.generatedAt) / 60000);
   $('#syncInfo').textContent = `Last synced ${mins < 1 ? 'just now' : mins < 60 ? mins + ' min ago' : fmtDate(RAW.generatedAt, RAW.timezone)} · ${RAW.leads.length} leads in GHL`;
@@ -423,9 +493,12 @@ async function boot() {
     const tile = e.target.closest('[data-tile]'); if (tile) { openList(INFO[tile.dataset.tile].t, CUR.cur.tiles[tile.dataset.tile]); return; }
     if (e.target.closest('[data-close]')) e.target.closest('dialog').close();
   });
+  setupHoverTips();
   document.addEventListener('keydown', e => { const tile = e.target.closest?.('[data-tile]'); if (tile && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); tile.click(); } });
   for (const dl of document.querySelectorAll('dialog')) dl.addEventListener('click', e => { if (e.target === dl) dl.close(); });
   $('#howBtn').onclick = openHow;
+  $('#newsBtn').onclick = openNews;
+  loadNews();
   if (CONFIG.mlsOfferFormUrl) { $('#mlsBtn').href = CONFIG.mlsOfferFormUrl; $('#mlsBtn').hidden = false; }
   setupUnlock();
   try {

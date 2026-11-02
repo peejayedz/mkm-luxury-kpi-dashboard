@@ -1,0 +1,28 @@
+{
+  "entries": [
+    {
+      "date": "2026-10-27",
+      "title": "Lead sources, offers, money and Voice AI",
+      "items": [
+        "Lead source buttons for Mario's 7 sources: PPC, Mailers, M Software, Outbound, MLS, Referral and Drive By. Each one shows every number for that source.",
+        "Offer numbers: offers made, contract to offer and offer to contract.",
+        "Money cards: spend, cost per lead, cost per deal and ROAS. These need the passphrase.",
+        "Lead source scorecard and sales rep scorecard.",
+        "New Voice AI section: calls, talk time, callers who became leads, booked and transferred calls.",
+        "A booked appointment now counts as a contact, the same rule as Premier Builders.",
+        "The MLS offer is now counted under MLS instead of PPC."
+      ]
+    },
+    {
+      "date": "2026-10-20",
+      "title": "Dashboard launched",
+      "items": [
+        "Sales KPIs from GoHighLevel, updated every hour, in the account's time zone.",
+        "Filter by date, lead source and sales rep, with a comparison to the previous period.",
+        "\"How this works\" guide and an ⓘ on every number.",
+        "Lead lists need the team passphrase. Show/hide the passphrase, and \"Remember me\" on your own device.",
+        "PJ and Mario are hidden from the sales rep views."
+      ]
+    }
+  ]
+}

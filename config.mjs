@@ -25,6 +25,10 @@ export const CONFIG = {
   spendSheetUrl: '',
   // GHL form for logging an MLS offer by hand. Shows the "+ Log MLS offer" button when set.
   mlsOfferFormUrl: '',
+  // Ann's working hours (account time zone). Speed to lead only counts minutes inside these.
+  businessHours: { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00' },
+  // Leads with any of these tags are left out of every lead number ("Not counted").
+  excludeTags: ['spam', 'not-a-seller', 'repeat-caller', 'duplicate'],
   sourceAliases: {
     'ppc launch': 'PPC Launch',
     'ppc': 'PPC Launch',

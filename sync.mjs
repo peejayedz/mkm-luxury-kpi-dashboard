@@ -181,10 +181,14 @@ const fieldValue = (o, fid) => {
   const n = Number(String(v ?? '').replace(/[$,\s]/g, ''));
   return v === '' || v == null || !Number.isFinite(n) ? null : n;
 };
+const offerField = oppFields.find(f => /offer.?amount|^offer$/i.test(f.name || ''));
 const deals = {};
 for (const o of opps) {
   const profit = profitField ? fieldValue(o, profitField.id) : null;
-  if (profit != null || Number(o.monetaryValue)) deals[o.id] = { profit, value: Number(o.monetaryValue) || null };
+  const offer = offerField ? fieldValue(o, offerField.id) : null;
+  if (profit != null || offer != null || Number(o.monetaryValue)) deals[o.id] = { profit, value: Number(o.monetaryValue) || null, offer };
+  const lead = leads.find(l => l.id === o.id);
+  if (lead) lead.offerLogged = offer != null; // the amount itself stays encrypted
 }
 function csvRows(text) {
   const rows = []; let row = [], cell = '', q = false;
@@ -296,6 +300,7 @@ const out = {
   voiceCalls,
   voiceAvailable,
   hasProfitField: !!profitField,
+  hasOfferField: !!offerField,
   hasSpendSheet: !!spendUrl,
   warnings,
   pii: { v: 2, salt: b64(salt), iv: b64(iv), ct: b64(ct), iterations: CONFIG.kdfIterations },

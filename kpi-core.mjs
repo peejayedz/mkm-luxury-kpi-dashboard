@@ -46,6 +46,40 @@ export function customRange(fromStr, toStr, tz) { // 'YYYY-MM-DD', inclusive dat
   const [ny, nm, nd] = addDays(ty, tm, td, 1);
   return { from: zonedMidnight(fy, fm, fd, tz), to: zonedMidnight(ny, nm, nd, tz) };
 }
+// ---------- business hours (Ann's working hours, account time zone) ----------
+// hours = { days: [1..5] (0=Sun), start: 'HH:MM', end: 'HH:MM' }
+export function zonedTime(y, m, d, hh, mm, tz) {
+  const guess = Date.UTC(y, m - 1, d, hh, mm);
+  let t = guess - offsetMs(guess, tz);
+  t = guess - offsetMs(t, tz);
+  return t;
+}
+const hm = s => { const [h, m] = String(s).split(':').map(Number); return [h, m || 0]; };
+function dayWindow(ms, tz, hours) {
+  const p = parts(ms, tz);
+  const dow = new Date(Date.UTC(p.y, p.m - 1, p.d)).getUTCDay();
+  if (!hours.days.includes(dow)) return null;
+  const [sh, sm] = hm(hours.start), [eh, em] = hm(hours.end);
+  return [zonedTime(p.y, p.m, p.d, sh, sm, tz), zonedTime(p.y, p.m, p.d, eh, em, tz)];
+}
+export function isBusinessTime(ms, tz, hours) {
+  const w = dayWindow(ms, tz, hours);
+  return !!w && ms >= w[0] && ms < w[1];
+}
+// Minutes between two moments that fall inside business hours (the clock is paused nights and weekends).
+export function businessMinutes(from, to, tz, hours) {
+  if (to <= from) return 0;
+  let total = 0, t = from, guard = 0;
+  while (t < to && guard++ < 400) {
+    const p = parts(t, tz);
+    const w = dayWindow(t, tz, hours);
+    if (w) total += Math.max(0, Math.min(w[1], to) - Math.max(w[0], t));
+    const [ny, nm, nd] = addDays(p.y, p.m, p.d, 1);
+    t = zonedMidnight(ny, nm, nd, tz);
+  }
+  return Math.round(total / 60000);
+}
+
 export function previousRange(r) { const len = r.to - r.from; return { from: r.from - len, to: r.from }; }
 
 export function fmtDate(ms, tz, withTime = true) {
@@ -64,9 +98,12 @@ const SOURCE_RULES = [
   [/referr?al/i, 'Referral'],
   [/drive.?by|d4d|driving for dollars/i, 'Drive By'],
 ];
-// Tag first (Ann tags every lead), then the GHL source field.
+// Phone-line tags added by the GHL "Call Details → In Phone Number" workflows.
+export const LINE_TAGS = { 'line-ppc': 'PPC', 'line-mailers': 'Mailers' };
+// Source tag first (Ann tags every lead), then the line the seller called, then the GHL source field.
 export function canonicalSource(tags = [], rawSource = '') {
-  for (const t of tags) for (const [re, s] of SOURCE_RULES) if (re.test(t)) return s;
+  for (const t of tags) { if (LINE_TAGS[t]) continue; for (const [re, s] of SOURCE_RULES) if (re.test(t)) return s; }
+  for (const t of tags) if (LINE_TAGS[t]) return LINE_TAGS[t];
   for (const [re, s] of SOURCE_RULES) if (re.test(rawSource || '')) return s;
   return 'Unknown';
 }
@@ -104,7 +141,15 @@ export function prepare(data, opts = {}) {
   for (const p of data.pipelines) { pipeById[p.id] = p; for (const s of p.stages) stageById[s.id] = { ...s, pipelineId: p.id, pipelineName: p.name, rank: stageRank(s.name) }; }
   const userById = Object.fromEntries(data.users.map(u => [u.id, u]));
   // Same rule as Premier Builders: a booked appointment counts as contact.
-  const bookedContacts = new Set((data.appointments || []).filter(a => a.contactId && !/cancel|invalid/.test(a.status || '')).map(a => a.contactId));
+  const liveAppts = (data.appointments || []).filter(a => a.contactId && !/cancel|invalid/.test(a.status || ''));
+  const bookedContacts = new Set(liveAppts.map(a => a.contactId));
+  const firstApptAt = {};
+  for (const a of liveAppts) { const t = Date.parse(a.createdAt) || a.createdAt; if (!firstApptAt[a.contactId] || t < firstApptAt[a.contactId]) firstApptAt[a.contactId] = t; }
+  const tz = data.timezone, hours = opts.businessHours || { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00' };
+  const excludeTags = (opts.excludeTags || ['spam', 'not-a-seller', 'not a seller', 'repeat-caller', 'duplicate']).map(t => t.toLowerCase());
+  // A contact only counts as a new lead the first time (repeat callers / duplicates count once).
+  const firstLeadOfContact = {};
+  for (const l of [...data.leads].sort((a, b) => a.createdAt - b.createdAt)) if (l.contactId && !firstLeadOfContact[l.contactId]) firstLeadOfContact[l.contactId] = l.id;
   const leads = data.leads.map(l => {
     const st = stageById[l.stageId] || { name: 'Unknown stage', rank: 0 };
     const tags = (l.tags || []).map(t => String(t).toLowerCase());
@@ -113,10 +158,23 @@ export function prepare(data, opts = {}) {
     const won = l.status === 'won' || rank === 5;
     const contract = rank >= 4 || won;
     // Offer = the Offer Script form was submitted (tag), or the card reached Perfect Presentation or later.
-    const offered = tags.includes(OFFER_TAG) || rank >= 3 || contract;
+    const contractSent = tags.includes('contract-sent');
+    const offered = tags.includes(OFFER_TAG) || !!l.offerLogged || rank >= 3 || contract || contractSent;
     const pipelineName = pipeById[l.pipelineId]?.name || '';
     const source = l.sourceOverride || canonicalSource(tags, /m.?software/i.test(pipelineName) ? 'M Software' : l.source);
-    return { ...l, tags, source, stageName: st.name, pipelineName, rank, won, contract, offered,
+    // Speed to lead: business-hours clock (nights/weekends don't count). A lead that booked a call before
+    // anyone dialled is judged on show / no-show instead, so it's left out of speed to lead.
+    const apptAt = firstApptAt[l.contactId];
+    const bookedFirst = !!apptAt && apptAt >= l.createdAt - 60000 && (!l.firstDialAt || apptAt < l.firstDialAt);
+    const calledInFirst = l.speedToLeadMin === 0 && (!l.firstDialAt || l.firstDialAt - l.createdAt > 60000);
+    const afterHours = !isBusinessTime(l.createdAt, tz, hours);
+    const stlBiz = bookedFirst ? null : calledInFirst ? 0 : l.firstDialAt ? businessMinutes(l.createdAt, l.firstDialAt, tz, hours) : null;
+    const stlRaw = bookedFirst ? null : l.speedToLeadMin;
+    const exTag = tags.find(t => excludeTags.includes(t));
+    const excluded = exTag ? (/repeat|duplicate/.test(exTag) ? 'Repeat caller' : 'Spam / not a seller')
+      : l.contactId && firstLeadOfContact[l.contactId] !== l.id ? 'Repeat caller' : null;
+    return { ...l, tags, source, stageName: st.name, pipelineName, rank, won, contract: contract || contractSent, offered,
+      afterHours, bookedFirst, stlBiz, stlRaw, excluded, contractSent,
       contacted: !!l.contactedAt || rank >= 1 || offered || bookedContacts.has(l.contactId),
       contactMethod: l.contactMethod || (bookedContacts.has(l.contactId) && !l.contactedAt ? 'Booked appointment' : l.contactMethod),
       lost: l.status === 'lost' || l.status === 'abandoned' || rank === -2,
@@ -147,6 +205,7 @@ export function attachMoney(P, money) {
     const d = money?.deals?.[l.id];
     l.profit = d ? (d.profit ?? null) : null;
     l.dealValue = d ? (d.value ?? null) : null;
+    l.offerAmount = d ? (d.offer ?? null) : null;
   }
   return P;
 }
@@ -182,15 +241,21 @@ const avg = arr => (arr.length ? arr.reduce((s, x) => s + x, 0) / arr.length : n
 const weekdays = f => { let n = 0; for (let t = f.from; t < f.to; t += 864e5) { const d = new Date(t + 12 * 36e5).getUTCDay(); if (d && d !== 6) n++; } return Math.max(1, n); };
 
 export function computeAll(P, f, tz = P.timezone) {
-  const cohort = P.leads.filter(l => inRange(l.createdAt, f) && leadMatches(l, f));
+  const all = P.leads.filter(l => inRange(l.createdAt, f) && leadMatches(l, f));
+  const excludedRows = all.filter(l => l.excluded);
+  const cohort = all.filter(l => !l.excluded); // only new, real sellers count as leads
+  const after = cohort.filter(l => l.afterHours);
+  const afterDialed = after.filter(l => l.stlBiz != null); // wait counted from Ann's next working hour
+  const afterContacted = after.filter(l => l.contacted);
   const contacted = cohort.filter(l => l.contacted);
   const offers = cohort.filter(l => l.offered);
   const contracts = cohort.filter(l => l.contract);
   const purchased = cohort.filter(l => l.won);
   const dead = cohort.filter(l => l.lost);
-  const dialed = cohort.filter(l => l.speedToLeadMin != null);
-  const within5 = dialed.filter(l => l.speedToLeadMin <= 5);
-  const notDialed = cohort.filter(l => l.speedToLeadMin == null);
+  const dialed = cohort.filter(l => l.stlBiz != null);
+  const within5 = dialed.filter(l => l.stlBiz <= 5);
+  const notDialed = cohort.filter(l => l.stlBiz == null && !l.bookedFirst);
+  const bookedFirstRows = cohort.filter(l => l.bookedFirst);
 
   // A dial not tied to a lead yet is cold outreach → it belongs to Outbound.
   const callMatches = c => inRange(c.at, f) &&
@@ -226,7 +291,11 @@ export function computeAll(P, f, tz = P.timezone) {
 
   const t = {
     newLeads: { value: cohort.length, rows: cohort, kind: 'lead' },
-    speedToLead: { value: avg(dialed.map(l => l.speedToLeadMin)), unit: 'min', rows: [...notDialed, ...[...dialed].sort((a, b) => b.speedToLeadMin - a.speedToLeadMin)], kind: 'stl', lowerIsBetter: true },
+    speedToLead: { value: avg(dialed.map(l => l.stlBiz)), unit: 'min', rows: [...notDialed, ...[...dialed].sort((a, b) => b.stlBiz - a.stlBiz), ...bookedFirstRows], kind: 'stl', lowerIsBetter: true },
+    afterLeads: { value: after.length, rows: after, kind: 'stl' },
+    afterSpeed: { value: avg(afterDialed.map(l => l.stlBiz)), unit: 'min', rows: [...after].sort((a, b) => (b.stlBiz ?? 1e12) - (a.stlBiz ?? 1e12)), kind: 'stl', lowerIsBetter: true },
+    afterContactRate: { value: pct(afterContacted.length, after.length), unit: '%', rows: after, kind: 'contact', num: afterContacted.length, den: after.length },
+    excluded: { value: excludedRows.length, rows: excludedRows, kind: 'excluded' },
     within5: { value: pct(within5.length, dialed.length), unit: '%', rows: dialed, kind: 'stl', num: within5.length, den: dialed.length },
     contactRate: { value: pct(contacted.length, cohort.length), unit: '%', rows: cohort, kind: 'contact', num: contacted.length, den: cohort.length },
     contacted: { value: contacted.length, rows: contacted, kind: 'contact' },

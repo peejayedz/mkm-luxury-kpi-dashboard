@@ -1,0 +1,109 @@
+{
+  "period": {
+    "mode": "daily",
+    "label": "Nov 9, 2026",
+    "timezone": "US/Eastern",
+    "from_ms": 1794200400000,
+    "to_ms": 1794286800000
+  },
+  "computed_at_ms": 1794305382356,
+  "generated_at_ms": 1794305382289,
+  "data_as_of": "Nov 10, 2026, 5:09 AM",
+  "data_age_hours": 0,
+  "names_and_spend_unlocked": false,
+  "leads": {
+    "new": 0,
+    "prev_period": 0,
+    "by_source": {},
+    "not_counted": 0
+  },
+  "speed": {
+    "avg_business_min": {
+      "value": null
+    },
+    "prev_avg_business_min": {
+      "value": null
+    },
+    "within_5_min_pct": {
+      "value": null,
+      "num": 0,
+      "den": 0
+    },
+    "not_called_yet": 0,
+    "waited_30_plus": 0,
+    "after_hours_leads": 0,
+    "after_hours_avg_min_from_9am": {
+      "value": null
+    }
+  },
+  "contact": {
+    "contact_ratio_pct": {
+      "value": null,
+      "num": 0,
+      "den": 0
+    },
+    "reached": 0
+  },
+  "calls": {
+    "dials": 0,
+    "connects_60s_plus": 0,
+    "inbound_missed": 0,
+    "missed_rate_pct": {
+      "value": null,
+      "num": 0,
+      "den": 0
+    },
+    "returning_callers": 0
+  },
+  "appointments": {
+    "booked": 0,
+    "show_rate_pct": {
+      "value": null,
+      "num": 0,
+      "den": 0
+    }
+  },
+  "sales_from_these_leads": {
+    "offers": 0,
+    "contracts": 0,
+    "closed": 0,
+    "dead": 0,
+    "contact_to_offer_pct": {
+      "value": null,
+      "num": 0,
+      "den": 0
+    },
+    "offer_to_contract_pct": {
+      "value": null,
+      "num": 0,
+      "den": 0
+    }
+  },
+  "pipeline_now": {
+    "engaged": 1,
+    "warm": 2,
+    "offer_out_perfect_presentation": 0,
+    "under_contract": 1
+  },
+  "voice_ai": {
+    "calls": 0,
+    "transferred": 0,
+    "booked": 0,
+    "became_lead": 0,
+    "under_30s": 0
+  },
+  "money": "locked (no passphrase)",
+  "lead_list": [],
+  "not_counted_list": [],
+  "missed_calls": [],
+  "dashboard_summary": {
+    "going_well": [],
+    "needs_attention": [
+      "No new leads came in during these dates."
+    ],
+    "focus": [
+      "Check lead flow: every new seller who calls in should get an opportunity in the Seller Leads pipeline."
+    ]
+  },
+  "warnings": []
+}

@@ -4,10 +4,12 @@ on:
   schedule:
     # GitHub often delays or skips scheduled runs, so ask three times an hour to get at least one sync an hour.
     - cron: '7,27,47 * * * *'
+    # Extra early-morning runs (about 6 and 7 AM Eastern) so the 8:38 AM report has fresh numbers.
+    - cron: '3 11,12 * * *'
   workflow_dispatch: {}    # "Run workflow" button
   push:
     branches: [main]
-    paths: ['sync.mjs', 'config.mjs', '.github/workflows/sync.yml']
+    paths: ['sync.mjs', 'config.mjs', 'kpi-core.mjs', 'scripts/report.mjs', '.github/workflows/sync.yml']
 
 permissions:
   contents: write
@@ -31,11 +33,15 @@ jobs:
           DASHBOARD_PASSPHRASE: ${{ secrets.DASHBOARD_PASSPHRASE }}
           SPEND_CSV_URL: ${{ secrets.SPEND_CSV_URL }}
         run: node sync.mjs
+      - name: Build report numbers (no names or spend)
+        run: |
+          REPORT_MODE=daily node scripts/report.mjs > facts-daily.json
+          REPORT_MODE=weekly node scripts/report.mjs > facts-weekly.json
       - name: Publish data.json
         run: |
           git config user.name "kpi-sync-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data.json
+          git add data.json facts-daily.json facts-weekly.json
           if git diff --cached --quiet; then echo "No changes"; exit 0; fi
           git commit -m "Sync GHL data"
           git pull --rebase origin main

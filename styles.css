@@ -197,6 +197,7 @@ table.grid tr.total td:first-child{background:color-mix(in srgb,var(--accent) 7%
 .kpi-tip p{margin:0 0 6px}
 .kpi-tip .tip-title{font-weight:650;font-size:13.5px}
 .kpi-tip .tip-how{color:var(--ink)}
+.kpi-tip .tip-needs{color:var(--ink);border-top:1px solid var(--line, rgba(127,127,127,.25));padding-top:6px}
 .kpi-tip .tip-goal,.kpi-tip .tip-counts{color:var(--muted)}
 .kpi-tip .tip-foot{margin:8px 0 0;padding-top:7px;border-top:1px solid var(--line);color:var(--muted);font-size:11.5px}
 @media (prefers-reduced-motion:no-preference){.kpi-tip:not([hidden]){animation:tipIn .12s ease-out}@keyframes tipIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}}

@@ -148,6 +148,13 @@ export function prepare(data, opts = {}) {
   const tz = data.timezone, hours = opts.businessHours || { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00' };
   const excludeTags = (opts.excludeTags || ['spam', 'not-a-seller', 'not a seller', 'repeat-caller', 'duplicate']).map(t => t.toLowerCase());
   // A contact only counts as a new lead the first time (repeat callers / duplicates count once).
+  // Voice AI calls by contact: a call the AI answered (and didn't transfer to a person) doesn't stop
+  // Ann's speed-to-lead clock. A transferred call does: the caller reached a person.
+  const aiByContact = {};
+  for (const v of data.voiceCalls || []) if (v.contactId) (aiByContact[v.contactId] ||= []).push(v);
+  const aiOnly = c => (aiByContact[c.contactId] || []).some(v => !v.transferred && Math.abs(v.at - c.at) < 3 * 6e4);
+  const callsByContact = {};
+  for (const c of data.calls || []) (callsByContact[c.contactId] ||= []).push(c);
   const firstLeadOfContact = {};
   for (const l of [...data.leads].sort((a, b) => a.createdAt - b.createdAt)) if (l.contactId && !firstLeadOfContact[l.contactId]) firstLeadOfContact[l.contactId] = l.id;
   const leads = data.leads.map(l => {
@@ -164,17 +171,21 @@ export function prepare(data, opts = {}) {
     const source = l.sourceOverride || canonicalSource(tags, /m.?software/i.test(pipelineName) ? 'M Software' : l.source);
     // Speed to lead: business-hours clock (nights/weekends don't count). A lead that booked a call before
     // anyone dialled is judged on show / no-show instead, so it's left out of speed to lead.
+    // t0 = when the lead came in: their first inbound call (arrivedAt) or the opportunity's creation.
+    const t0 = l.arrivedAt || l.createdAt;
     const apptAt = firstApptAt[l.contactId];
-    const bookedFirst = !!apptAt && apptAt >= l.createdAt - 60000 && (!l.firstDialAt || apptAt < l.firstDialAt);
-    const calledInFirst = l.speedToLeadMin === 0 && (!l.firstDialAt || l.firstDialAt - l.createdAt > 60000);
-    const afterHours = !isBusinessTime(l.createdAt, tz, hours);
-    const stlBiz = bookedFirst ? null : calledInFirst ? 0 : l.firstDialAt ? businessMinutes(l.createdAt, l.firstDialAt, tz, hours) : null;
-    const stlRaw = bookedFirst ? null : l.speedToLeadMin;
+    const bookedFirst = !!apptAt && apptAt >= t0 - 60000 && (!l.firstDialAt || apptAt < l.firstDialAt);
+    // "Called in first" = the seller phoned us and talked to a person (60s+) before any dial: 0 min.
+    const talkIn = (callsByContact[l.contactId] || []).find(c => c.direction === 'inbound' && c.status === 'completed' && c.duration >= 60 && c.at >= t0 - 60000 && (!l.firstDialAt || c.at < l.firstDialAt));
+    const calledInFirst = l.speedToLeadMin === 0 && (!l.firstDialAt || l.firstDialAt - t0 > 60000) && !(talkIn && aiOnly(talkIn));
+    const afterHours = !isBusinessTime(t0, tz, hours);
+    const stlBiz = bookedFirst ? null : calledInFirst ? 0 : l.firstDialAt ? businessMinutes(t0, l.firstDialAt, tz, hours) : null;
+    const stlRaw = bookedFirst ? null : calledInFirst ? 0 : l.firstDialAt ? Math.max(0, Math.round((l.firstDialAt - t0) / 60000)) : null;
     const exTag = tags.find(t => excludeTags.includes(t));
     const excluded = exTag ? (/repeat|duplicate/.test(exTag) ? 'Repeat caller' : 'Spam / not a seller')
       : l.contactId && firstLeadOfContact[l.contactId] !== l.id ? 'Repeat caller' : null;
     return { ...l, tags, source, stageName: st.name, pipelineName, rank, won, contract: contract || contractSent, offered,
-      afterHours, bookedFirst, stlBiz, stlRaw, excluded, contractSent,
+      t0, afterHours, bookedFirst, stlBiz, stlRaw, excluded, contractSent,
       contacted: !!l.contactedAt || rank >= 1 || offered || bookedContacts.has(l.contactId),
       contactMethod: l.contactMethod || (bookedContacts.has(l.contactId) && !l.contactedAt ? 'Booked appointment' : l.contactMethod),
       lost: l.status === 'lost' || l.status === 'abandoned' || rank === -2,
@@ -219,7 +230,10 @@ export function spendInRange(P, f, tz) {
     any = true;
     const [y, m] = row.month.split('-').map(Number);
     const start = zonedMidnight(y, m, 1, tz);
-    const end = m === 12 ? zonedMidnight(y + 1, 1, 1, tz) : zonedMidnight(y, m + 1, 1, tz);
+    const monthEnd = m === 12 ? zonedMidnight(y + 1, 1, 1, tz) : zonedMidnight(y, m + 1, 1, tz);
+    // The current month's spend is month-to-date (the Google Ads script updates it daily, mailer invoices
+    // are added as they come), so spread it over the days so far, not the whole month.
+    const end = P.generatedAt && P.generatedAt > start && P.generatedAt < monthEnd ? P.generatedAt : monthEnd;
     const overlap = Math.max(0, Math.min(end, f.to) - Math.max(start, f.from));
     total += (Number(row.amount) || 0) * (overlap / (end - start));
   }
@@ -266,6 +280,10 @@ export function computeAll(P, f, tz = P.timezone) {
   const connects = dials.filter(c => c.status === 'completed' && c.duration >= 60);
   const inbound = callsIn.filter(c => c.direction === 'inbound');
   const missed = inbound.filter(c => c.status !== 'completed');
+  // Returning callers: inbound calls from sellers already in the pipeline (their lead came in more than
+  // an hour before this call). They're not new leads; this shows Ann is getting them back on the phone.
+  const returningCalls = inbound.filter(c => c.lead && !/spam/i.test(c.lead.excluded || '') && c.at > (c.lead.t0 || c.lead.createdAt) + 36e5);
+  const returningPeople = new Set(returningCalls.map(c => c.contactId)).size;
   for (const m of missed) {
     const cb = P.calls.find(c => c.contactId === m.contactId && c.direction === 'outbound' && c.at > m.at);
     m.callbackAt = cb ? cb.at : null;
@@ -319,6 +337,7 @@ export function computeAll(P, f, tz = P.timezone) {
     dialsPerLead: { value: cohort.length ? cohort.reduce((s, l) => s + (l.dialCount || 0), 0) / cohort.length : null, unit: 'x', rows: cohort, kind: 'stl' },
     missedRate: { value: pct(missed.length, inbound.length), unit: '%', rows: missed, kind: 'missed', num: missed.length, den: inbound.length, lowerIsBetter: true },
     dead: { value: dead.length, rows: dead, kind: 'lead', lowerIsBetter: true },
+    returning: { value: returningPeople, rows: returningCalls, kind: 'call', countIsPeople: true },
     booked: { value: booked.length, rows: booked, kind: 'appt' },
     showRate: { value: pct(showed.length, booked.length), unit: '%', rows: showed, kind: 'appt', num: showed.length, den: booked.length },
     aiCalls: { value: vIn.length, rows: vIn, kind: 'voice', voice: true },

@@ -123,7 +123,14 @@ const leads = opps.map(o => {
   const c = contacts[cid] || {};
   const created = ts(o.createdAt);
   const msgs = (messagesByContact[cid] || []).map(m => ({ ...m, _t: ts(m.dateAdded) })).filter(m => m._t).sort((a, b) => a._t - b._t);
-  const after = msgs.filter(m => m._t >= created - 60e3);
+  // A seller who phoned in (PPC/Mailers line, Voice AI) "came in" with that call, not when Ann or the AI
+  // created the opportunity later. Arrival = their first inbound call in the 7 days before the opportunity,
+  // as long as they had no earlier opportunity (a returning lead is not a new arrival).
+  const prevOpp = opps.some(p => p !== o && (p.contactId || p.contact?.id) === cid && ts(p.createdAt) < created);
+  const firstIn = prevOpp ? null : msgs.find(m => isCall(m) && m.direction === 'inbound' && m._t >= created - 7 * 864e5 && m._t < created - 60e3);
+  const arrived = firstIn ? firstIn._t : null;
+  const base = arrived ?? created;
+  const after = msgs.filter(m => m._t >= base - 60e3);
   const firstDial = after.find(m => isCall(m) && m.direction === 'outbound');
   const contactEvt = after.find(m =>
     (isCall(m) && callStatus(m) === 'completed' && callDuration(m) >= 60) ||
@@ -136,7 +143,7 @@ const leads = opps.map(o => {
     else contactMethod = 'Other channel';
   }
   let stl = null;
-  if (firstDial) stl = Math.max(0, Math.round((firstDial._t - created) / 60000));
+  if (firstDial) stl = Math.max(0, Math.round((firstDial._t - base) / 60000));
   if (contactEvt && isCall(contactEvt) && contactEvt.direction === 'inbound' && (!firstDial || contactEvt._t < firstDial._t)) stl = 0;
   const dials = after.filter(m => isCall(m) && m.direction === 'outbound');
   for (const m of msgs.filter(isCall)) {
@@ -152,6 +159,7 @@ const leads = opps.map(o => {
     source: normSource(o, c),
     assignedTo: o.assignedTo || null,
     createdAt: created,
+    arrivedAt: arrived,
     stageChangedAt: ts(o.lastStageChangeAt) || ts(o.updatedAt),
     statusChangedAt: ts(o.lastStatusChangeAt),
     lostReason: o.lostReasonId || null,

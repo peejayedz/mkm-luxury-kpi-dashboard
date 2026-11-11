@@ -1,20 +1,22 @@
 {
   "period": {
     "mode": "daily",
-    "label": "Nov 9, 2026",
+    "label": "Nov 10, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1794200400000,
-    "to_ms": 1794286800000
+    "from_ms": 1794286800000,
+    "to_ms": 1794373200000
   },
-  "computed_at_ms": 1794360105493,
-  "generated_at_ms": 1794360105432,
-  "data_as_of": "Nov 10, 2026, 8:21 PM",
+  "computed_at_ms": 1794383424946,
+  "generated_at_ms": 1794383424887,
+  "data_as_of": "Nov 11, 2026, 2:50 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
-    "new": 0,
+    "new": 1,
     "prev_period": 0,
-    "by_source": {},
+    "by_source": {
+      "Unknown": 1
+    },
     "not_counted": 0
   },
   "speed": {
@@ -29,7 +31,7 @@
       "num": 0,
       "den": 0
     },
-    "not_called_yet": 0,
+    "not_called_yet": 1,
     "waited_30_plus": 0,
     "after_hours_leads": 0,
     "after_hours_avg_min_from_9am": {
@@ -38,9 +40,9 @@
   },
   "contact": {
     "contact_ratio_pct": {
-      "value": null,
+      "value": 0,
       "num": 0,
-      "den": 0
+      "den": 1
     },
     "reached": 0
   },
@@ -86,23 +88,46 @@
     "under_contract": 1
   },
   "voice_ai": {
-    "calls": 0,
+    "calls": 1,
     "transferred": 0,
     "booked": 0,
     "became_lead": 0,
     "under_30s": 0
   },
   "money": "locked (no passphrase)",
-  "lead_list": [],
+  "lead_list": [
+    {
+      "name": null,
+      "source": "Unknown",
+      "came_in": "12:32 PM",
+      "came_in_by_call": false,
+      "after_hours": false,
+      "called_in_biz_min": null,
+      "booked_before_call": false,
+      "not_called_yet": true,
+      "dials": 0,
+      "reached": false,
+      "how_reached": null,
+      "stage": "Not Engaged",
+      "offer_made": false,
+      "under_contract": false,
+      "closed": false,
+      "owner": "Other (admins)"
+    }
+  ],
   "not_counted_list": [],
   "missed_calls": [],
   "dashboard_summary": {
     "going_well": [],
     "needs_attention": [
-      "No new leads came in during these dates."
+      "1 new lead hasn’t been called yet.",
+      "Contact ratio is 0% (0 of 1) vs the 80% goal.",
+      "1 lead has no source tag, so it doesn’t show under any lead source."
     ],
     "focus": [
-      "Check lead flow: every new seller who calls in should get an opportunity in the Seller Leads pipeline."
+      "Call the new lead that hasn’t been called yet.",
+      "Keep following up until each lead is reached: call, text, and call again the same day.",
+      "Tag every new lead with its source (ppc, mailers, mls, drive by, referral, outbound, m software)."
     ]
   },
   "warnings": []

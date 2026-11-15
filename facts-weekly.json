@@ -6,9 +6,9 @@
     "from_ms": 1794114000000,
     "to_ms": 1794718800000
   },
-  "computed_at_ms": 1794723001853,
-  "generated_at_ms": 1794723001730,
-  "data_as_of": "Nov 15, 2026, 1:10 AM",
+  "computed_at_ms": 1794751707288,
+  "generated_at_ms": 1794751707166,
+  "data_as_of": "Nov 15, 2026, 9:08 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
@@ -82,7 +82,7 @@
     }
   },
   "pipeline_now": {
-    "engaged": 1,
+    "engaged": 2,
     "warm": 2,
     "offer_out_perfect_presentation": 0,
     "under_contract": 1

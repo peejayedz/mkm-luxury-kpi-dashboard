@@ -1,20 +1,22 @@
 {
   "period": {
     "mode": "daily",
-    "label": "Nov 14, 2026",
+    "label": "Nov 15, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1794632400000,
-    "to_ms": 1794718800000
+    "from_ms": 1794718800000,
+    "to_ms": 1794805200000
   },
-  "computed_at_ms": 1794786899158,
-  "generated_at_ms": 1794786899088,
-  "data_as_of": "Nov 15, 2026, 6:54 PM",
+  "computed_at_ms": 1794809291839,
+  "generated_at_ms": 1794809291785,
+  "data_as_of": "Nov 16, 2026, 1:08 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
-    "new": 0,
+    "new": 1,
     "prev_period": 0,
-    "by_source": {},
+    "by_source": {
+      "Unknown": 1
+    },
     "not_counted": 0
   },
   "speed": {
@@ -29,20 +31,20 @@
       "num": 0,
       "den": 0
     },
-    "not_called_yet": 0,
+    "not_called_yet": 1,
     "waited_30_plus": 0,
-    "after_hours_leads": 0,
+    "after_hours_leads": 1,
     "after_hours_avg_min_from_9am": {
       "value": null
     }
   },
   "contact": {
     "contact_ratio_pct": {
-      "value": null,
-      "num": 0,
-      "den": 0
+      "value": 100,
+      "num": 1,
+      "den": 1
     },
-    "reached": 0
+    "reached": 1
   },
   "calls": {
     "dials": 0,
@@ -69,9 +71,9 @@
     "closed": 0,
     "dead": 0,
     "contact_to_offer_pct": {
-      "value": null,
+      "value": 0,
       "num": 0,
-      "den": 0
+      "den": 1
     },
     "offer_to_contract_pct": {
       "value": null,
@@ -86,23 +88,48 @@
     "under_contract": 1
   },
   "voice_ai": {
-    "calls": 2,
-    "transferred": 1,
+    "calls": 0,
+    "transferred": 0,
     "booked": 0,
     "became_lead": 0,
     "under_30s": 0
   },
   "money": "locked (no passphrase)",
-  "lead_list": [],
+  "lead_list": [
+    {
+      "name": null,
+      "source": "Unknown",
+      "came_in": "1:32 AM",
+      "came_in_by_call": false,
+      "after_hours": true,
+      "called_in_biz_min": null,
+      "booked_before_call": false,
+      "not_called_yet": true,
+      "dials": 0,
+      "reached": true,
+      "how_reached": null,
+      "stage": "Engaged",
+      "offer_made": false,
+      "under_contract": false,
+      "closed": false,
+      "owner": "Other (admins)"
+    }
+  ],
   "not_counted_list": [],
   "missed_calls": [],
   "dashboard_summary": {
-    "going_well": [],
+    "going_well": [
+      "Contact ratio is 100% (1 of 1), well ahead of the 80% goal."
+    ],
     "needs_attention": [
-      "No new leads came in during these dates."
+      "1 new lead hasn’t been called yet.",
+      "Contact → offer is 0% (0 of 1) vs the 40% goal.",
+      "1 lead has no source tag, so it doesn’t show under any lead source."
     ],
     "focus": [
-      "Check lead flow: every new seller who calls in should get an opportunity in the Seller Leads pipeline."
+      "Call the new lead that hasn’t been called yet.",
+      "Make an offer to every qualified seller you talk to, and tag it offer-made.",
+      "Tag every new lead with its source (ppc, mailers, mls, drive by, referral, outbound, m software)."
     ]
   },
   "warnings": []

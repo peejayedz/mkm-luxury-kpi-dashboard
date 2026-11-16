@@ -6,16 +6,16 @@
     "from_ms": 1794200400000,
     "to_ms": 1794805200000
   },
-  "computed_at_ms": 1794845309859,
-  "generated_at_ms": 1794845309740,
-  "data_as_of": "Nov 16, 2026, 11:08 AM",
+  "computed_at_ms": 1794862150083,
+  "generated_at_ms": 1794862149965,
+  "data_as_of": "Nov 16, 2026, 3:49 PM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
     "new": 1,
     "prev_period": 0,
     "by_source": {
-      "Unknown": 1
+      "M Software": 1
     },
     "not_counted": 0
   },
@@ -40,11 +40,11 @@
   },
   "contact": {
     "contact_ratio_pct": {
-      "value": 0,
-      "num": 0,
+      "value": 100,
+      "num": 1,
       "den": 1
     },
-    "reached": 0
+    "reached": 1
   },
   "calls": {
     "dials": 0,
@@ -71,9 +71,9 @@
     "closed": 0,
     "dead": 0,
     "contact_to_offer_pct": {
-      "value": null,
+      "value": 0,
       "num": 0,
-      "den": 0
+      "den": 1
     },
     "offer_to_contract_pct": {
       "value": null,
@@ -82,7 +82,7 @@
     }
   },
   "pipeline_now": {
-    "engaged": 1,
+    "engaged": 2,
     "warm": 2,
     "offer_out_perfect_presentation": 0,
     "under_contract": 1
@@ -98,7 +98,7 @@
   "lead_list": [
     {
       "name": null,
-      "source": "Unknown",
+      "source": "M Software",
       "came_in": "Sun 1:32 AM",
       "came_in_by_call": false,
       "after_hours": true,
@@ -106,9 +106,9 @@
       "booked_before_call": false,
       "not_called_yet": true,
       "dials": 0,
-      "reached": false,
+      "reached": true,
       "how_reached": null,
-      "stage": "Not Engaged",
+      "stage": "Engaged",
       "offer_made": false,
       "under_contract": false,
       "closed": false,
@@ -118,16 +118,16 @@
   "not_counted_list": [],
   "missed_calls": [],
   "dashboard_summary": {
-    "going_well": [],
+    "going_well": [
+      "Contact ratio is 100% (1 of 1), well ahead of the 80% goal."
+    ],
     "needs_attention": [
       "1 new lead hasn’t been called yet.",
-      "Contact ratio is 0% (0 of 1) vs the 80% goal.",
-      "1 lead has no source tag, so it doesn’t show under any lead source."
+      "Contact → offer is 0% (0 of 1) vs the 40% goal."
     ],
     "focus": [
       "Call the new lead that hasn’t been called yet.",
-      "Keep following up until each lead is reached: call, text, and call again the same day.",
-      "Tag every new lead with its source (ppc, mailers, mls, drive by, referral, outbound, m software)."
+      "Make an offer to every qualified seller you talk to, and tag it offer-made."
     ]
   },
   "warnings": []

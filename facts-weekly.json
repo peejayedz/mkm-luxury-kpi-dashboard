@@ -6,16 +6,16 @@
     "from_ms": 1794200400000,
     "to_ms": 1794805200000
   },
-  "computed_at_ms": 1794809291882,
-  "generated_at_ms": 1794809291785,
-  "data_as_of": "Nov 16, 2026, 1:08 AM",
+  "computed_at_ms": 1794845309859,
+  "generated_at_ms": 1794845309740,
+  "data_as_of": "Nov 16, 2026, 11:08 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
-    "new": 2,
+    "new": 1,
     "prev_period": 0,
     "by_source": {
-      "Unknown": 2
+      "Unknown": 1
     },
     "not_counted": 0
   },
@@ -31,7 +31,7 @@
       "num": 0,
       "den": 0
     },
-    "not_called_yet": 2,
+    "not_called_yet": 1,
     "waited_30_plus": 0,
     "after_hours_leads": 1,
     "after_hours_avg_min_from_9am": {
@@ -40,11 +40,11 @@
   },
   "contact": {
     "contact_ratio_pct": {
-      "value": 50,
-      "num": 1,
-      "den": 2
+      "value": 0,
+      "num": 0,
+      "den": 1
     },
-    "reached": 1
+    "reached": 0
   },
   "calls": {
     "dials": 0,
@@ -71,9 +71,9 @@
     "closed": 0,
     "dead": 0,
     "contact_to_offer_pct": {
-      "value": 0,
+      "value": null,
       "num": 0,
-      "den": 1
+      "den": 0
     },
     "offer_to_contract_pct": {
       "value": null,
@@ -82,7 +82,7 @@
     }
   },
   "pipeline_now": {
-    "engaged": 2,
+    "engaged": 1,
     "warm": 2,
     "offer_out_perfect_presentation": 0,
     "under_contract": 1
@@ -99,9 +99,9 @@
     {
       "name": null,
       "source": "Unknown",
-      "came_in": "Tue 12:32 PM",
+      "came_in": "Sun 1:32 AM",
       "came_in_by_call": false,
-      "after_hours": false,
+      "after_hours": true,
       "called_in_biz_min": null,
       "booked_before_call": false,
       "not_called_yet": true,
@@ -113,24 +113,6 @@
       "under_contract": false,
       "closed": false,
       "owner": "Other (admins)"
-    },
-    {
-      "name": null,
-      "source": "Unknown",
-      "came_in": "Sun 1:32 AM",
-      "came_in_by_call": false,
-      "after_hours": true,
-      "called_in_biz_min": null,
-      "booked_before_call": false,
-      "not_called_yet": true,
-      "dials": 0,
-      "reached": true,
-      "how_reached": null,
-      "stage": "Engaged",
-      "offer_made": false,
-      "under_contract": false,
-      "closed": false,
-      "owner": "Other (admins)"
     }
   ],
   "not_counted_list": [],
@@ -138,15 +120,14 @@
   "dashboard_summary": {
     "going_well": [],
     "needs_attention": [
-      "2 new leads haven’t been called yet.",
-      "Contact ratio is 50% (1 of 2) vs the 80% goal.",
-      "Contact → offer is 0% (0 of 1) vs the 40% goal.",
-      "2 leads have no source tag, so they don’t show under any lead source."
+      "1 new lead hasn’t been called yet.",
+      "Contact ratio is 0% (0 of 1) vs the 80% goal.",
+      "1 lead has no source tag, so it doesn’t show under any lead source."
     ],
     "focus": [
-      "Call the 2 new leads that haven’t been called yet.",
+      "Call the new lead that hasn’t been called yet.",
       "Keep following up until each lead is reached: call, text, and call again the same day.",
-      "Make an offer to every qualified seller you talk to, and tag it offer-made."
+      "Tag every new lead with its source (ppc, mailers, mls, drive by, referral, outbound, m software)."
     ]
   },
   "warnings": []

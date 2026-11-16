@@ -6,9 +6,9 @@
     "from_ms": 1794718800000,
     "to_ms": 1794805200000
   },
-  "computed_at_ms": 1794809291839,
-  "generated_at_ms": 1794809291785,
-  "data_as_of": "Nov 16, 2026, 1:08 AM",
+  "computed_at_ms": 1794845309805,
+  "generated_at_ms": 1794845309740,
+  "data_as_of": "Nov 16, 2026, 11:08 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
@@ -40,11 +40,11 @@
   },
   "contact": {
     "contact_ratio_pct": {
-      "value": 100,
-      "num": 1,
+      "value": 0,
+      "num": 0,
       "den": 1
     },
-    "reached": 1
+    "reached": 0
   },
   "calls": {
     "dials": 0,
@@ -71,9 +71,9 @@
     "closed": 0,
     "dead": 0,
     "contact_to_offer_pct": {
-      "value": 0,
+      "value": null,
       "num": 0,
-      "den": 1
+      "den": 0
     },
     "offer_to_contract_pct": {
       "value": null,
@@ -82,7 +82,7 @@
     }
   },
   "pipeline_now": {
-    "engaged": 2,
+    "engaged": 1,
     "warm": 2,
     "offer_out_perfect_presentation": 0,
     "under_contract": 1
@@ -106,9 +106,9 @@
       "booked_before_call": false,
       "not_called_yet": true,
       "dials": 0,
-      "reached": true,
+      "reached": false,
       "how_reached": null,
-      "stage": "Engaged",
+      "stage": "Not Engaged",
       "offer_made": false,
       "under_contract": false,
       "closed": false,
@@ -118,17 +118,15 @@
   "not_counted_list": [],
   "missed_calls": [],
   "dashboard_summary": {
-    "going_well": [
-      "Contact ratio is 100% (1 of 1), well ahead of the 80% goal."
-    ],
+    "going_well": [],
     "needs_attention": [
       "1 new lead hasn’t been called yet.",
-      "Contact → offer is 0% (0 of 1) vs the 40% goal.",
+      "Contact ratio is 0% (0 of 1) vs the 80% goal.",
       "1 lead has no source tag, so it doesn’t show under any lead source."
     ],
     "focus": [
       "Call the new lead that hasn’t been called yet.",
-      "Make an offer to every qualified seller you talk to, and tag it offer-made.",
+      "Keep following up until each lead is reached: call, text, and call again the same day.",
       "Tag every new lead with its source (ppc, mailers, mls, drive by, referral, outbound, m software)."
     ]
   },

@@ -1,22 +1,20 @@
 {
   "period": {
     "mode": "daily",
-    "label": "Nov 16, 2026",
+    "label": "Nov 17, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1794805200000,
-    "to_ms": 1794891600000
+    "from_ms": 1794891600000,
+    "to_ms": 1794978000000
   },
-  "computed_at_ms": 1794959894899,
-  "generated_at_ms": 1794959894826,
-  "data_as_of": "Nov 17, 2026, 6:58 PM",
+  "computed_at_ms": 1794985692074,
+  "generated_at_ms": 1794985692025,
+  "data_as_of": "Nov 18, 2026, 2:08 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
-    "new": 1,
+    "new": 0,
     "prev_period": 1,
-    "by_source": {
-      "M Software": 1
-    },
+    "by_source": {},
     "not_counted": 0
   },
   "speed": {
@@ -31,7 +29,7 @@
       "num": 0,
       "den": 0
     },
-    "not_called_yet": 1,
+    "not_called_yet": 0,
     "waited_30_plus": 0,
     "after_hours_leads": 0,
     "after_hours_avg_min_from_9am": {
@@ -40,9 +38,9 @@
   },
   "contact": {
     "contact_ratio_pct": {
-      "value": 0,
+      "value": null,
       "num": 0,
-      "den": 1
+      "den": 0
     },
     "reached": 0
   },
@@ -95,37 +93,16 @@
     "under_30s": 0
   },
   "money": "locked (no passphrase)",
-  "lead_list": [
-    {
-      "name": null,
-      "source": "M Software",
-      "came_in": "10:13 AM",
-      "came_in_by_call": false,
-      "after_hours": false,
-      "called_in_biz_min": null,
-      "booked_before_call": false,
-      "not_called_yet": true,
-      "dials": 0,
-      "reached": false,
-      "how_reached": null,
-      "stage": "Not Engaged",
-      "offer_made": false,
-      "under_contract": false,
-      "closed": false,
-      "owner": "Other (admins)"
-    }
-  ],
+  "lead_list": [],
   "not_counted_list": [],
   "missed_calls": [],
   "dashboard_summary": {
     "going_well": [],
     "needs_attention": [
-      "1 new lead hasn’t been called yet.",
-      "Contact ratio is 0% (0 of 1) vs the 80% goal."
+      "No new leads came in during these dates."
     ],
     "focus": [
-      "Call the new lead that hasn’t been called yet.",
-      "Keep following up until each lead is reached: call, text, and call again the same day."
+      "Check lead flow: every new seller who calls in should get an opportunity in the Seller Leads pipeline."
     ]
   },
   "warnings": []

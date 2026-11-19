@@ -1,19 +1,19 @@
 {
   "period": {
     "mode": "daily",
-    "label": "Nov 17, 2026",
+    "label": "Nov 18, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1794891600000,
-    "to_ms": 1794978000000
+    "from_ms": 1794978000000,
+    "to_ms": 1795064400000
   },
-  "computed_at_ms": 1795061799478,
-  "generated_at_ms": 1795061799431,
-  "data_as_of": "Nov 18, 2026, 11:16 PM",
+  "computed_at_ms": 1795095230443,
+  "generated_at_ms": 1795095230329,
+  "data_as_of": "Nov 19, 2026, 8:33 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
     "new": 0,
-    "prev_period": 1,
+    "prev_period": 0,
     "by_source": {},
     "not_counted": 0
   },

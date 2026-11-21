@@ -6,9 +6,9 @@
     "from_ms": 1794632400000,
     "to_ms": 1795237200000
   },
-  "computed_at_ms": 1795283579701,
-  "generated_at_ms": 1795283579573,
-  "data_as_of": "Nov 21, 2026, 12:52 PM",
+  "computed_at_ms": 1795297431602,
+  "generated_at_ms": 1795297431482,
+  "data_as_of": "Nov 21, 2026, 4:43 PM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
@@ -40,11 +40,11 @@
   },
   "contact": {
     "contact_ratio_pct": {
-      "value": 50,
-      "num": 1,
+      "value": 100,
+      "num": 2,
       "den": 2
     },
-    "reached": 1
+    "reached": 2
   },
   "calls": {
     "dials": 0,
@@ -73,7 +73,7 @@
     "contact_to_offer_pct": {
       "value": 0,
       "num": 0,
-      "den": 1
+      "den": 2
     },
     "offer_to_contract_pct": {
       "value": null,
@@ -82,7 +82,7 @@
     }
   },
   "pipeline_now": {
-    "engaged": 2,
+    "engaged": 3,
     "warm": 2,
     "offer_out_perfect_presentation": 0,
     "under_contract": 1
@@ -124,9 +124,9 @@
       "booked_before_call": false,
       "not_called_yet": true,
       "dials": 0,
-      "reached": false,
+      "reached": true,
       "how_reached": null,
-      "stage": "Not Engaged",
+      "stage": "Engaged",
       "offer_made": false,
       "under_contract": false,
       "closed": false,
@@ -136,15 +136,15 @@
   "not_counted_list": [],
   "missed_calls": [],
   "dashboard_summary": {
-    "going_well": [],
+    "going_well": [
+      "Contact ratio is 100% (2 of 2), well ahead of the 80% goal."
+    ],
     "needs_attention": [
       "2 new leads haven’t been called yet.",
-      "Contact ratio is 50% (1 of 2) vs the 80% goal.",
-      "Contact → offer is 0% (0 of 1) vs the 40% goal."
+      "Contact → offer is 0% (0 of 2) vs the 40% goal. This is the biggest drop-off in the funnel."
     ],
     "focus": [
       "Call the 2 new leads that haven’t been called yet.",
-      "Keep following up until each lead is reached: call, text, and call again the same day.",
       "Make an offer to every qualified seller you talk to, and tag it offer-made."
     ]
   },

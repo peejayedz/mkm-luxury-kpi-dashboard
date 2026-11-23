@@ -1,21 +1,21 @@
 {
   "period": {
     "mode": "weekly",
-    "label": "Nov 15, 2026 – Nov 21, 2026",
+    "label": "Nov 16, 2026 – Nov 22, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1794718800000,
-    "to_ms": 1795323600000
+    "from_ms": 1794805200000,
+    "to_ms": 1795410000000
   },
-  "computed_at_ms": 1795402535332,
-  "generated_at_ms": 1795402535212,
-  "data_as_of": "Nov 22, 2026, 9:55 PM",
+  "computed_at_ms": 1795435959097,
+  "generated_at_ms": 1795435958983,
+  "data_as_of": "Nov 23, 2026, 7:12 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
-    "new": 2,
-    "prev_period": 0,
+    "new": 1,
+    "prev_period": 1,
     "by_source": {
-      "M Software": 2
+      "M Software": 1
     },
     "not_counted": 0
   },
@@ -31,9 +31,9 @@
       "num": 0,
       "den": 0
     },
-    "not_called_yet": 2,
+    "not_called_yet": 1,
     "waited_30_plus": 0,
-    "after_hours_leads": 1,
+    "after_hours_leads": 0,
     "after_hours_avg_min_from_9am": {
       "value": null
     }
@@ -41,10 +41,10 @@
   "contact": {
     "contact_ratio_pct": {
       "value": 100,
-      "num": 2,
-      "den": 2
+      "num": 1,
+      "den": 1
     },
-    "reached": 2
+    "reached": 1
   },
   "calls": {
     "dials": 0,
@@ -73,7 +73,7 @@
     "contact_to_offer_pct": {
       "value": 0,
       "num": 0,
-      "den": 2
+      "den": 1
     },
     "offer_to_contract_pct": {
       "value": null,
@@ -99,24 +99,6 @@
     {
       "name": null,
       "source": "M Software",
-      "came_in": "Sun 1:32 AM",
-      "came_in_by_call": false,
-      "after_hours": true,
-      "called_in_biz_min": null,
-      "booked_before_call": false,
-      "not_called_yet": true,
-      "dials": 0,
-      "reached": true,
-      "how_reached": null,
-      "stage": "Engaged",
-      "offer_made": false,
-      "under_contract": false,
-      "closed": false,
-      "owner": "Other (admins)"
-    },
-    {
-      "name": null,
-      "source": "M Software",
       "came_in": "Mon 10:13 AM",
       "came_in_by_call": false,
       "after_hours": false,
@@ -137,14 +119,14 @@
   "missed_calls": [],
   "dashboard_summary": {
     "going_well": [
-      "Contact ratio is 100% (2 of 2), well ahead of the 80% goal."
+      "Contact ratio is 100% (1 of 1), well ahead of the 80% goal."
     ],
     "needs_attention": [
-      "2 new leads haven’t been called yet.",
-      "Contact → offer is 0% (0 of 2) vs the 40% goal. This is the biggest drop-off in the funnel."
+      "1 new lead hasn’t been called yet.",
+      "Contact → offer is 0% (0 of 1) vs the 40% goal."
     ],
     "focus": [
-      "Call the 2 new leads that haven’t been called yet.",
+      "Call the new lead that hasn’t been called yet.",
       "Make an offer to every qualified seller you talk to, and tag it offer-made."
     ]
   },

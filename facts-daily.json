@@ -1,21 +1,21 @@
 {
   "period": {
     "mode": "daily",
-    "label": "Nov 22, 2026",
+    "label": "Nov 23, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1795323600000,
-    "to_ms": 1795410000000
+    "from_ms": 1795410000000,
+    "to_ms": 1795496400000
   },
-  "computed_at_ms": 1795472864643,
-  "generated_at_ms": 1795472864576,
-  "data_as_of": "Nov 23, 2026, 5:27 PM",
+  "computed_at_ms": 1795513458060,
+  "generated_at_ms": 1795513457999,
+  "data_as_of": "Nov 24, 2026, 4:44 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
     "new": 0,
     "prev_period": 0,
     "by_source": {},
-    "not_counted": 0
+    "not_counted": 1
   },
   "speed": {
     "avg_business_min": {
@@ -94,10 +94,19 @@
   },
   "money": "locked (no passphrase)",
   "lead_list": [],
-  "not_counted_list": [],
+  "not_counted_list": [
+    {
+      "name": null,
+      "source": "M Software",
+      "reason": "Spam / not a seller",
+      "came_in": "1:28 AM"
+    }
+  ],
   "missed_calls": [],
   "dashboard_summary": {
-    "going_well": [],
+    "going_well": [
+      "1 junk or repeat call was kept out of the numbers."
+    ],
     "needs_attention": [
       "No new leads came in during these dates."
     ],

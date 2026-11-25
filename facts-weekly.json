@@ -6,9 +6,9 @@
     "from_ms": 1794978000000,
     "to_ms": 1795582800000
   },
-  "computed_at_ms": 1795638223979,
-  "generated_at_ms": 1795638223855,
-  "data_as_of": "Nov 25, 2026, 3:23 PM",
+  "computed_at_ms": 1795640446567,
+  "generated_at_ms": 1795640446439,
+  "data_as_of": "Nov 25, 2026, 4:00 PM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
@@ -83,7 +83,7 @@
     "engaged": 3,
     "warm": 2,
     "offer_out_perfect_presentation": 0,
-    "under_contract": 1
+    "under_contract": 0
   },
   "voice_ai": {
     "calls": 1,

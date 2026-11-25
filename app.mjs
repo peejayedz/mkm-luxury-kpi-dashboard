@@ -1,5 +1,5 @@
-import { CONFIG } from './config.mjs?v=v3f';
-import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, executiveSummary, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v3f';
+import { CONFIG } from './config.mjs?v=v3g';
+import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, executiveSummary, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v3g';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -56,11 +56,12 @@ const INFO = {
 };
 
 const ROWS = [
+  // v3g: Mario's order (Nov 23 call): leads in, deal funnel, ROAS, results, then after-hours & lead quality
   ['Leads in', ['newLeads', 'speedToLead', 'within5', 'contactRate']],
-  ['After hours & lead quality', ['afterLeads', 'afterSpeed', 'afterContactRate', 'excluded']],
   ['Deal funnel', ['offers', 'contactToOffer', 'offerToContract', 'contractToPurchase']],
   ['Ad spend & ROAS', ['adSpend', 'costPerLead', 'costPerAcq', 'roas'], true],
   ['Results', ['contracts', 'purchased', 'totalProfit', 'profitPerDeal']],
+  ['After hours & lead quality', ['afterLeads', 'afterSpeed', 'afterContactRate', 'excluded']],
   ['Activity & health', ['dials', 'dialsPerLead', 'missedRate', 'returning', 'dead']],
   ['Voice AI', ['aiCalls', 'aiAvgDuration', 'aiTotalTime', 'aiCallers', 'aiBecameLead', 'aiBooked', 'aiTransferred', 'aiShort'], 'voice'],
 ];
@@ -185,7 +186,7 @@ function render() {
 // ---------- executive summary ----------
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 function spendMissingNote() {
-  if (st.rep !== 'all' || !['all', 'PPC', 'Mailers', 'M Software'].includes(st.source)) return null;
+  if (st.rep !== 'all' || !['all', 'PPC', 'Facebook', 'Mailers', 'M Software'].includes(st.source)) return null;
   if (!RAW.hasSpendSheet) return 'No monthly ad spend has been entered yet, so cost per lead and ROAS are blank.';
   if (!P.money) return null; // locked: can't see the sheet rows
   const t = todayParts(tz()); const y = t.m === 1 ? t.y - 1 : t.y, m = t.m === 1 ? 12 : t.m - 1;
@@ -349,7 +350,7 @@ function openHow() {
     <ul>
       <li><b>Where the numbers come from:</b> GoHighLevel (MKM Luxury). A sync runs every hour and reads opportunities, contacts, users, calls and calendars. Nothing is changed in GHL.</li>
       <li><b>Dates:</b> every lead number uses the date the lead was <i>created</i>, so the rates line up (e.g. contact rate = contacted ÷ new leads from the same dates). Calls use the call date. Times are in the account’s time zone (${esc(RAW?.timezone || '')}).</li>
-      <li><b>Whole company or one source:</b> “All sources” shows the whole company. Click PPC, Mailers, M Software, Outbound, MLS, Referral or Drive By to see every number for just that source. A lead’s source comes from its source tag first, then the phone line the seller called (PPC line 561-461-2261, Mailer line 689-329-1441), then the GHL source field. The scorecard at the bottom shows all sources side by side.</li>
+      <li><b>Whole company or one source:</b> “All sources” shows the whole company. Click PPC, Facebook, Mailers, M Software, Outbound, MLS, Referral or Drive By to see every number for just that source. A lead’s source comes from its source tag first, then the phone line the seller called (PPC line 561-461-2261, Mailer line 689-329-1441), then the GHL source field. The scorecard at the bottom shows all sources side by side.</li>
       <li><b>Sales rep:</b> pick a rep to see their dials, contacts, offers and deals. Spend isn’t split by rep.</li>
       <li><b>Compare:</b> the ▲▼ under each number compares to the same length of time just before (green = better).</li>
       <li><b>Click any number</b> to see exactly which leads or calls make it up. The tile number always equals the list length.</li>

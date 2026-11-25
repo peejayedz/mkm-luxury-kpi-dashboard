@@ -88,9 +88,11 @@ export function fmtDate(ms, tz, withTime = true) {
 }
 
 // ---------- lead sources (Mario's list, in display order) ----------
-export const SOURCES = ['PPC', 'Mailers', 'M Software', 'Outbound', 'MLS', 'Referral', 'Drive By'];
+export const SOURCES = ['PPC', 'Facebook', 'Mailers', 'M Software', 'Outbound', 'MLS', 'Referral', 'Drive By'];
 const SOURCE_RULES = [
-  [/^ppc|pay.?per.?click|ppc launch|google ads|facebook/i, 'PPC'],
+  // v3g: Facebook lead ads are their own campaign (tag "facebook", or a facebook / fb / meta / instagram source)
+  [/facebook|^fb\b|\bfb (lead|form|ad)|meta ads?|instagram/i, 'Facebook'],
+  [/^ppc|pay.?per.?click|ppc launch|google ads/i, 'PPC'],
   [/mailer|direct mail|postcard/i, 'Mailers'],
   [/m.?software/i, 'M Software'],
   [/outbound|cold.?call|cold call|skip.?trace/i, 'Outbound'],
@@ -104,6 +106,9 @@ export const LINE_TAGS = { 'line-ppc': 'PPC', 'line-mailers': 'Mailers' };
 export function canonicalSource(tags = [], rawSource = '') {
   for (const t of tags) { if (LINE_TAGS[t]) continue; for (const [re, s] of SOURCE_RULES) if (re.test(t)) return s; }
   for (const t of tags) if (LINE_TAGS[t]) return LINE_TAGS[t];
+  // v3g: a lead created from a text to the PPC / mailer line (tag text-lead). GHL can't tell which line was
+  // texted, and nearly all of these are mailer replies, so Mailers unless Ann adds line-ppc.
+  if (tags.includes(TEXT_LEAD_TAG)) return 'Mailers';
   for (const [re, s] of SOURCE_RULES) if (re.test(rawSource || '')) return s;
   return 'Unknown';
 }
@@ -123,6 +128,10 @@ export function stageRank(name) {
   return 0;
 }
 export const OFFER_TAG = 'offer-made';
+// v3g: leads tagged skip-speed-to-lead still count as leads and as contacted, but are left out of speed to
+// lead (e.g. Ann called from her own phone, not GHL, so the call isn't logged).
+export const SKIP_STL_TAG = 'skip-speed-to-lead';
+export const TEXT_LEAD_TAG = 'text-lead';
 
 // Reps hidden from the dashboard (e.g. owners / admins). Their leads and calls still
 // count in every total; on the leaderboard they are grouped as "Other (admins)".
@@ -179,13 +188,14 @@ export function prepare(data, opts = {}) {
     const talkIn = (callsByContact[l.contactId] || []).find(c => c.direction === 'inbound' && c.status === 'completed' && c.duration >= 60 && c.at >= t0 - 60000 && (!l.firstDialAt || c.at < l.firstDialAt));
     const calledInFirst = l.speedToLeadMin === 0 && (!l.firstDialAt || l.firstDialAt - t0 > 60000) && !(talkIn && aiOnly(talkIn));
     const afterHours = !isBusinessTime(t0, tz, hours);
-    const stlBiz = bookedFirst ? null : calledInFirst ? 0 : l.firstDialAt ? businessMinutes(t0, l.firstDialAt, tz, hours) : null;
-    const stlRaw = bookedFirst ? null : calledInFirst ? 0 : l.firstDialAt ? Math.max(0, Math.round((l.firstDialAt - t0) / 60000)) : null;
+    const skipStl = tags.includes(SKIP_STL_TAG);
+    const stlBiz = bookedFirst || skipStl ? null : calledInFirst ? 0 : l.firstDialAt ? businessMinutes(t0, l.firstDialAt, tz, hours) : null;
+    const stlRaw = bookedFirst || skipStl ? null : calledInFirst ? 0 : l.firstDialAt ? Math.max(0, Math.round((l.firstDialAt - t0) / 60000)) : null;
     const exTag = tags.find(t => excludeTags.includes(t));
     const excluded = exTag ? (/repeat|duplicate/.test(exTag) ? 'Repeat caller' : 'Spam / not a seller')
       : l.contactId && firstLeadOfContact[l.contactId] !== l.id ? 'Repeat caller' : null;
     return { ...l, tags, source, stageName: st.name, pipelineName, rank, won, contract: contract || contractSent, offered,
-      t0, afterHours, bookedFirst, stlBiz, stlRaw, excluded, contractSent,
+      t0, afterHours, bookedFirst, skipStl, stlBiz, stlRaw, excluded, contractSent,
       contacted: !!l.contactedAt || rank >= 1 || offered || bookedContacts.has(l.contactId),
       contactMethod: l.contactMethod || (bookedContacts.has(l.contactId) && !l.contactedAt ? 'Booked appointment' : l.contactMethod),
       lost: l.status === 'lost' || l.status === 'abandoned' || rank === -2,
@@ -268,7 +278,7 @@ export function computeAll(P, f, tz = P.timezone) {
   const dead = cohort.filter(l => l.lost);
   const dialed = cohort.filter(l => l.stlBiz != null);
   const within5 = dialed.filter(l => l.stlBiz <= 5);
-  const notDialed = cohort.filter(l => l.stlBiz == null && !l.bookedFirst);
+  const notDialed = cohort.filter(l => l.stlBiz == null && !l.bookedFirst && !l.skipStl);
   const bookedFirstRows = cohort.filter(l => l.bookedFirst);
 
   // A dial not tied to a lead yet is cold outreach → it belongs to Outbound.

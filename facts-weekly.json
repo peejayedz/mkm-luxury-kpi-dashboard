@@ -1,14 +1,14 @@
 {
   "period": {
     "mode": "weekly",
-    "label": "Nov 17, 2026 – Nov 23, 2026",
+    "label": "Nov 18, 2026 – Nov 24, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1794891600000,
-    "to_ms": 1795496400000
+    "from_ms": 1794978000000,
+    "to_ms": 1795582800000
   },
-  "computed_at_ms": 1795577770880,
-  "generated_at_ms": 1795577770759,
-  "data_as_of": "Nov 24, 2026, 10:36 PM",
+  "computed_at_ms": 1795613451402,
+  "generated_at_ms": 1795613451279,
+  "data_as_of": "Nov 25, 2026, 8:30 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
@@ -86,11 +86,11 @@
     "under_contract": 1
   },
   "voice_ai": {
-    "calls": 0,
-    "transferred": 0,
+    "calls": 1,
+    "transferred": 1,
     "booked": 0,
     "became_lead": 0,
-    "under_30s": 0
+    "under_30s": 1
   },
   "money": "locked (no passphrase)",
   "lead_list": [],

@@ -236,6 +236,59 @@ if (spendUrl) await optional('ad spend sheet', async () => {
   }
 });
 
+// ---------- v3h: Bot Log sheet (Zacky logs MLS offers, Zoe logs mailer / M Software invoices) ----------
+// One Google Sheet, shared "anyone with the link can view"; its link is the repo secret BOTLOG_SHEET_URL.
+// Tabs are read by their gid (CONFIG.botLog). Mailer Costs rows join the ad spend; MLS Offers rows become
+// public counts (date + status only) with the address and amounts kept in the encrypted part.
+const botId = ((process.env.BOTLOG_SHEET_URL || '').match(/\/spreadsheets\/d\/([^/?#]+)/) || [])[1] || '';
+const botCsv = gid => `https://docs.google.com/spreadsheets/d/${botId}/export?format=csv&gid=${gid}`;
+async function botTab(name, gid) {
+  const res = await fetch(botCsv(gid), { redirect: 'follow' });
+  if (!res.ok) throw new Error(`${name} tab returned ${res.status} — share the Bot Log sheet as "Anyone with the link can view"`);
+  const rows = csvRows(await res.text());
+  const head = (rows.shift() || []).map(h => h.toLowerCase().trim());
+  return { head, rows };
+}
+function dayKey(v) {
+  const t = String(v || '').trim();
+  let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+  m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) return `${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+  return null;
+}
+const num = v => { const s = String(v ?? '').replace(/[$,\s]/g, ''); const n = Number(s); return s === '' || !Number.isFinite(n) ? null : n; };
+const mlsOffers = [], mlsPii = {};
+let botCostRows = 0;
+if (botId) {
+  await optional('Bot Log: Mailer Costs', async () => {
+    const { head, rows } = await botTab('Mailer Costs', CONFIG.botLog.costsGid);
+    const col = re => head.findIndex(h => re.test(h));
+    const iM = col(/^month/), iS = col(/^source/), iA = col(/^spend|amount/), iI = col(/invoice\s*#|invoice no|^invoice$/), iV = col(/^vendor/);
+    const seenInv = new Set();
+    for (const r of rows) {
+      const amount = num(r[iA]); if (amount == null) continue; // not filled in yet: not a $0 invoice
+      const inv = String(r[iI] ?? '').trim();
+      if (inv && seenInv.has(inv)) { warnings.push(`Bot Log: invoice ${inv} is listed twice; counted once`); continue; }
+      if (inv) seenInv.add(inv);
+      const month = monthKey(r[iM]), source = canonicalSource([], r[iS] || '');
+      if (month && (source === 'Mailers' || source === 'M Software')) { spend.push({ month, source, amount, invoice: inv, vendor: String(r[iV] ?? '').trim(), from: 'Bot Log' }); botCostRows++; }
+      else warnings.push(`Bot Log Mailer Costs: skipped row "${r.join(', ')}"`);
+    }
+  });
+  await optional('Bot Log: MLS Offers', async () => {
+    const { head, rows } = await botTab('MLS Offers', CONFIG.botLog.offersGid);
+    const col = re => head.findIndex(h => re.test(h));
+    const iD = col(/^date sent/), iA = col(/^address/), iO = col(/^offer/), iL = col(/^list/), iB = col(/^sent by/), iSt = col(/^status$/), iSd = col(/^status date/);
+    const STATUSES = ['Sent', 'Countered', 'Accepted', 'Rejected', 'Under contract', 'Dead'];
+    rows.forEach((r, i) => {
+      const sent = dayKey(r[iD]), status = STATUSES.find(s => s.toLowerCase() === String(r[iSt] ?? '').trim().toLowerCase()) || '';
+      if (!sent || !status) return; // no status yet = not confirmed sent (e.g. waiting on the agent)
+      const id = `mls${i + 2}`; // sheet row number
+      mlsOffers.push({ id, sent, status, statusDate: dayKey(r[iSd]) || sent });
+      mlsPii[id] = { address: String(r[iA] ?? '').trim(), offer: num(r[iO]), list: num(r[iL]), sentBy: String(r[iB] ?? '').trim() };
+    });
+  });
+}
+
 // ---------- Voice AI call logs ----------
 let voiceAvailable = true;
 const agents = await optional('voice AI agents', async () => {
@@ -275,7 +328,7 @@ for (const v of voiceLogs || []) {
 }
 
 // ---------- encrypt contact details, money and AI call summaries ----------
-const pii = { contacts: {}, opps: {}, money: { deals, spend }, voice: voicePii };
+const pii = { contacts: {}, opps: {}, money: { deals, spend, mlsOffers: mlsPii }, voice: voicePii };
 for (const o of opps) pii.opps[o.id] = o.name || '';
 for (const id of contactIds) {
   const c = contacts[id] || {};
@@ -311,9 +364,11 @@ const out = {
   voiceAvailable,
   hasProfitField: !!profitField,
   hasOfferField: !!offerField,
-  hasSpendSheet: !!spendUrl,
+  hasSpendSheet: !!spendUrl || botCostRows > 0,
+  hasBotLog: !!botId,
+  mlsOffers,
   warnings,
   pii: { v: 2, salt: b64(salt), iv: b64(iv), ct: b64(ct), iterations: CONFIG.kdfIterations },
 };
 writeFileSync('data.json', JSON.stringify(out));
-console.log(`wrote data.json: ${leads.length} leads, ${callList.length} calls, ${appointments.length} appointments, ${voiceCalls.length} AI calls, ${spend.length} spend rows, profit field ${profitField ? 'found' : 'missing'}, ${users.length} users, ${warnings.length} warnings, ${calls} API calls`);
+console.log(`wrote data.json: ${leads.length} leads, ${callList.length} calls, ${appointments.length} appointments, ${voiceCalls.length} AI calls, ${spend.length} spend rows (${botCostRows} from the Bot Log), ${mlsOffers.length} MLS offers, profit field ${profitField ? 'found' : 'missing'}, ${users.length} users, ${warnings.length} warnings, ${calls} API calls`);

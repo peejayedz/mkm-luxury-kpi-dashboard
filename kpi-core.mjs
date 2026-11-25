@@ -215,7 +215,10 @@ export function prepare(data, opts = {}) {
     const lead = became || ls.slice().sort((a, b) => b.createdAt - a.createdAt)[0] || null;
     return { ...v, lead, becameLead: !!became, contactId: v.contactId, source: lead?.source || null };
   });
-  return { ...data, leads, calls, appts, voice, stageById, pipeById, userById, money: null };
+  // v3h: MLS offers (LOIs) from the Bot Log: public part is the sent date and status; address and amounts
+  // come from the encrypted part (attachMoney).
+  const mlsOffers = (data.mlsOffers || []).map(o => { const [y, m, d] = o.sent.split('-').map(Number); return { ...o, sentAt: zonedMidnight(y, m, d, tz) }; });
+  return { ...data, leads, calls, appts, voice, mlsOffers, stageById, pipeById, userById, money: null };
 }
 
 // Money lives in the encrypted part of data.json. Call after unlocking.
@@ -228,6 +231,7 @@ export function attachMoney(P, money) {
     l.dealValue = d ? (d.value ?? null) : null;
     l.offerAmount = d ? (d.offer ?? null) : null;
   }
+  for (const o of P.mlsOffers || []) Object.assign(o, { address: '', offer: null, list: null, sentBy: '' }, money?.mlsOffers?.[o.id] || {});
   return P;
 }
 
@@ -317,7 +321,15 @@ export function computeAll(P, f, tz = P.timezone) {
   const totalProfit = locked ? null : withProfit.reduce((s, l) => s + l.profit, 0);
   const money = (v, extra = {}) => ({ value: v, money: true, locked, repFiltered, ...extra });
 
+  // v3h: MLS offers (LOIs) sent in these dates. Not tied to a GHL lead or rep, so only under All sources / MLS.
+  const loiScope = (!f.source || f.source === 'all' || f.source === 'MLS') && !repFiltered;
+  const lois = loiScope ? (P.mlsOffers || []).filter(o => inRange(o.sentAt, f)).sort((a, b) => b.sentAt - a.sentAt) : [];
+
   const t = {
+    lois: { value: loiScope ? lois.length : null, rows: lois, kind: 'mls', notScoped: !loiScope },
+    loiOffered: { ...money(!loiScope || locked ? null : lois.reduce((s, o) => s + (o.offer || 0), 0)), unit: '$', rows: lois, kind: 'mls', notScoped: !loiScope },
+    loiCountered: { value: loiScope ? lois.filter(o => o.status === 'Countered').length : null, rows: lois.filter(o => o.status === 'Countered'), kind: 'mls', notScoped: !loiScope },
+    loiAccepted: { value: loiScope ? lois.filter(o => /^(accepted|under contract)$/i.test(o.status)).length : null, rows: lois.filter(o => /^(accepted|under contract)$/i.test(o.status)), kind: 'mls', notScoped: !loiScope },
     newLeads: { value: cohort.length, rows: cohort, kind: 'lead' },
     speedToLead: { value: avg(dialed.map(l => l.stlBiz)), unit: 'min', rows: [...notDialed, ...[...dialed].sort((a, b) => b.stlBiz - a.stlBiz), ...bookedFirstRows], kind: 'stl', lowerIsBetter: true },
     afterLeads: { value: after.length, rows: after, kind: 'stl' },
@@ -429,6 +441,7 @@ export function executiveSummary(tiles, fun, ctx = {}) {
     if (ok) good.push({ text: `${g.label} is ${fmtN(t.value, g.unit)}${counts}, ${well ? 'well ahead of' : 'on target for'} the ${goalTxt(g)} goal.`, tile: g.k });
     else { perf.push({ text: `${g.label} is ${fmtN(t.value, g.unit)}${counts} vs the ${goalTxt(g)} goal.${worst?.k === g.k ? ' This is the biggest drop-off in the funnel.' : ''}`, tile: g.k }); addFocus(g.focus); }
   }
+  if (tiles.lois?.value) good.push({ text: `${tiles.lois.value} MLS offer${tiles.lois.value > 1 ? 's (LOIs) were' : ' (LOI) was'} sent.`, tile: 'lois' });
   if (tiles.excluded?.value) good.push({ text: `${tiles.excluded.value} junk or repeat call${tiles.excluded.value > 1 ? 's were' : ' was'} kept out of the numbers.`, tile: 'excluded' });
   const unknown = (tiles.newLeads.rows || []).filter(l => l.source === 'Unknown').length;
   if (unknown) { data.push({ text: unknown > 1 ? `${unknown} leads have no source tag, so they don’t show under any lead source.` : '1 lead has no source tag, so it doesn’t show under any lead source.', tile: 'newLeads' }); addFocus('Tag every new lead with its source (ppc, mailers, mls, drive by, referral, outbound, m software).'); }

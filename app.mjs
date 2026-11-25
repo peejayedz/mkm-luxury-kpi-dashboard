@@ -1,5 +1,5 @@
-import { CONFIG } from './config.mjs?v=v3g';
-import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, executiveSummary, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v3g';
+import { CONFIG } from './config.mjs?v=v3h';
+import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, executiveSummary, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v3h';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -23,6 +23,10 @@ const INFO = {
   returning: { t: 'Returning callers', what: 'Sellers already in the pipeline who called us again.', how: 'Inbound calls in these dates from a seller whose lead came in more than an hour earlier, counted once per person. They are not new leads, so they never add to New leads.', src: 'GHL call logs + opportunities.', moves: 'Follow-up, mailers and ads bringing past sellers back.', needs: "Nothing to tag: calls are matched to the seller's existing opportunity. The Voice AI adds returning-lead for reference." },
   contacted: { t: 'Contacted', what: 'New leads with two-way contact.', how: 'Same rule as Contact ratio, shown as a count.', src: 'GHL Conversations + pipeline stage.', moves: 'A reply, a 60s+ call or an offer.' },
   offers: { t: 'Offers made', what: 'New leads we made an offer to.', how: 'The rep submitted the Offer Script form (tag “offer-made”), or the card reached Perfect Presentation or later. MLS offers logged with the MLS button count here too.', src: 'GHL Offer Script form / tag + pipeline stage.', moves: 'Making offers and logging them with the Offer Script.', needs: "Add the tag offer-made (moves the card to Perfect Presentation) and type the amount in the Offer Amount field." },
+  lois: { t: 'MLS offers sent', what: 'Letters of intent (LOIs) sent on MLS listings in the selected dates.', how: 'One row per LOI in the Bot Log sheet (MLS Offers tab), counted by the date it was sent. Rows with no status yet (not confirmed sent) are left out. Shown under All sources and MLS; not split by rep.', src: 'Bot Log sheet, logged by Zacky from the team’s Signal messages.', moves: 'Sending offers on MLS listings and logging them.', needs: 'Zacky logs each LOI: date sent, address, offer, list price, sent by and status.' },
+  loiOffered: { t: 'Total offered (LOIs)', what: 'The total of the offer amounts on the LOIs sent in these dates.', how: 'Sum of the Offer column for the LOIs counted in MLS offers sent. LOIs with no amount logged yet add nothing.', src: 'Bot Log sheet (MLS Offers tab).', moves: 'Logging the offer amount on every LOI.', needs: 'Zacky fills in the offer amount for each LOI.' },
+  loiCountered: { t: 'LOIs countered', what: 'LOIs sent in these dates where the seller came back with a counter.', how: 'LOIs counted in MLS offers sent whose status is Countered.', src: 'Bot Log sheet (MLS Offers tab).', moves: 'Sellers responding to offers.', needs: 'Zacky updates the status when a counter comes in.' },
+  loiAccepted: { t: 'LOIs accepted', what: 'LOIs sent in these dates that were accepted or went under contract.', how: 'LOIs counted in MLS offers sent whose status is Accepted or Under contract.', src: 'Bot Log sheet (MLS Offers tab).', moves: 'Offers that turn into deals.', needs: 'Zacky updates the status when an offer is accepted or goes under contract.' },
   contactToOffer: { t: 'Contact → offer', goal: 'Starting goal: 40%', what: 'Of the leads we reached, how many got an offer.', how: 'Offers made ÷ contacted leads.', src: 'GHL.', moves: 'Turning conversations into offers.', needs: "Tag offer-made on every offer." },
   offerToContract: { t: 'Offer → contract', goal: 'Starting goal: 25%', what: 'Of the offers we made, how many went under contract.', how: 'Under contract (or purchased) ÷ offers made.', src: 'GHL pipeline stage.', moves: 'Moving the card to Under Contract.', needs: "Add contract-sent when the contract goes out, and move the card to Under Contract when it's signed." },
   contractToPurchase: { t: 'Contract → purchase', goal: 'Starting goal: 70%', what: 'Of the contracts, how many we actually bought / closed.', how: 'Purchased ÷ under contract.', src: 'GHL pipeline stage / status.', moves: 'Moving the card to Closed (or marking it Won).', needs: "Move the card to Closed (or mark it Won) when the deal closes." },
@@ -59,6 +63,7 @@ const ROWS = [
   // v3g: Mario's order (Nov 23 call): leads in, deal funnel, ROAS, results, then after-hours & lead quality
   ['Leads in', ['newLeads', 'speedToLead', 'within5', 'contactRate']],
   ['Deal funnel', ['offers', 'contactToOffer', 'offerToContract', 'contractToPurchase']],
+  ['MLS offers (LOIs)', ['lois', 'loiOffered', 'loiCountered', 'loiAccepted']],
   ['Ad spend & ROAS', ['adSpend', 'costPerLead', 'costPerAcq', 'roas'], true],
   ['Results', ['contracts', 'purchased', 'totalProfit', 'profitPerDeal']],
   ['After hours & lead quality', ['afterLeads', 'afterSpeed', 'afterContactRate', 'excluded']],
@@ -219,7 +224,7 @@ function tileHtml(k, t, p) {
     } else delta = '<span>no change</span>';
   } else if (p) delta = '<span>—</span>';
   if ((t.money && (t.locked || t.value == null)) || (t.voice && !RAW.voiceAvailable)) delta = '';
-  const sub = t.voice && !RAW.voiceAvailable ? 'Not connected yet' : t.money && !t.locked && t.kind === 'spend' && t.value == null && !t.repFiltered ? 'No spend entered yet' : t.money && t.locked ? 'Passphrase needed' : t.money && t.repFiltered && t.value == null ? 'Not split by rep' : t.den != null ? `${t.num} of ${t.den}` : '';
+  const sub = t.kind === 'mls' && t.notScoped ? 'All sources or MLS only' : t.kind === 'mls' && !RAW.hasBotLog ? 'Bot Log not connected' : t.voice && !RAW.voiceAvailable ? 'Not connected yet' : t.money && !t.locked && t.kind === 'spend' && t.value == null && !t.repFiltered ? 'No spend entered yet' : t.money && t.locked ? 'Passphrase needed' : t.money && t.repFiltered && t.value == null ? 'Not split by rep' : t.den != null ? `${t.num} of ${t.den}` : '';
   return `<div class="tile" role="button" tabindex="0" data-tile="${k}" aria-label="${esc(info.t)}: ${esc(fmtVal(t))}. Open list">
     <button class="i" type="button" data-info="${k}" aria-label="How ${esc(info.t)} works">i</button>
     <span class="lab">${esc(info.t)}</span>${info.goal ? `<span class="goal">${esc(info.goal)}</span>` : ''}
@@ -249,6 +254,7 @@ const COLS = {
   missed: [['Name', nameCell, plainName], ['Phone', phone], ['Missed at', r => d(r.at), r => r.at], ['Called back?', r => r.callbackAt ? '<span class="chip good">Yes</span>' : '<span class="chip bad">No</span>', r => r.callbackAt ? 1 : 0], ['Callback at', r => r.callbackAt ? d(r.callbackAt) : '', r => r.callbackAt || 0], ['Callback wait', r => dur(r.callbackMin), r => r.callbackMin ?? 1e12], ['Lead stage', r => esc(r.lead?.stageName || ''), r => r.lead?.rank ?? -9], ['Rep', r => esc(r.lead?.ownerName || ''), r => r.lead?.ownerName || '']],
   excluded: [['Name', nameCell, plainName], ['Phone', phone], ['Why not counted', r => `<span class="chip">${esc(r.excluded)}</span>`, r => r.excluded], ['Source', r => esc(r.source), r => r.source], ['Created', r => d(r.createdAt), r => r.createdAt], ['Rep', r => esc(r.ownerName), r => r.ownerName], ['Stage', r => esc(r.stageName), r => r.rank]],
   voice: [['Caller', nameCell, plainName], ['Phone', r => { const p = person(r.contactId); return p ? (p.phone ? esc(p.phone) : esc(r.fromNumber || '')) : '•••'; }], ['Called at', r => d(r.at), r => r.at], ['Agent', r => esc(r.agentName || ''), r => r.agentName || ''], ['Length', r => fmtVal({ value: r.duration || 0, unit: 'dur' }), r => r.duration || 0], ['Actions', r => [r.transferred ? '<span class="chip">Transferred</span>' : '', r.booked ? '<span class="chip good">Booked</span>' : ''].join(' ') || '', r => (r.transferred ? 1 : 0) + (r.booked ? 2 : 0)], ['New lead?', r => r.becameLead ? '<span class="chip good">Yes</span>' : '', r => r.becameLead ? 1 : 0], ['Lead source', r => esc(r.source || ''), r => r.source || ''], ['Summary', r => esc(PII?.voice?.[r.id] || ''), r => PII?.voice?.[r.id] || '']],
+  mls: [['Address', r => esc(r.address || '•••'), r => r.address], ['Offer', r => r.offer != null ? money(r.offer) : '', r => r.offer ?? -1], ['List price', r => r.list != null ? money(r.list) : '', r => r.list ?? -1], ['Offer ÷ list', r => r.offer != null && r.list ? Math.round(r.offer / r.list * 100) + '%' : '', r => r.offer != null && r.list ? r.offer / r.list : -1], ['Sent', r => esc(r.sent), r => r.sent], ['Sent by', r => esc(r.sentBy), r => r.sentBy], ['Status', r => `<span class="chip ${/accepted|under contract/i.test(r.status) ? 'good' : /rejected|dead/i.test(r.status) ? 'bad' : ''}">${esc(r.status)}</span>`, r => r.status], ['Status date', r => esc(r.statusDate), r => r.statusDate]],
   appt: [['Name', nameCell, plainName], ['Phone', phone], ['Calendar', r => esc(r.calendarName), r => r.calendarName], ['Appointment', r => d(new Date(r.startTime).getTime()), r => new Date(r.startTime).getTime()], ['Booked on', r => d(new Date(r.createdAt).getTime()), r => new Date(r.createdAt).getTime()], ['Status', r => esc(r.status), r => r.status], ['Rep', r => esc(r.userName), r => r.userName]],
 };
 function statusChip(r) { const s = r.status; return `<span class="chip ${s === 'won' ? 'good' : s === 'lost' || s === 'abandoned' ? 'bad' : ''}">${esc(s)}</span>`; }
@@ -271,9 +277,9 @@ function openList(title, tile) {
   if (!PII) { PENDING = [title, tile]; openUnlock('Enter the team passphrase to open this list.'); return; }
   M = { title, tile, kind: tile.kind === 'lead' && false ? 'lead' : tile.kind, q: '', sort: null, dir: 1, page: 0, rep: 'all', src: 'all' };
   const total = tile.rows.length;
-  const people = new Set(tile.rows.map(r => r.contactId || r.lead?.contactId)).size;
+  const people = tile.kind === 'mls' ? total : new Set(tile.rows.map(r => r.contactId || r.lead?.contactId)).size;
   if (tile.kind === 'spend') { openSpend(title); return; }
-  const sumVal = tile.kind === 'deal' && tile.rows.some(r => r.profit != null) ? ` · profit ${money(tile.rows.reduce((s, r) => s + (r.profit || 0), 0))}` : '';
+  const sumVal = tile.kind === 'deal' && tile.rows.some(r => r.profit != null) ? ` · profit ${money(tile.rows.reduce((s, r) => s + (r.profit || 0), 0))}` : tile.kind === 'mls' && tile.rows.some(r => r.offer != null) ? ` · ${money(tile.rows.reduce((s, r) => s + (r.offer || 0), 0))} offered` : '';
   $('#mTitle').textContent = title;
   $('#mSub').textContent = `${total} ${total === 1 ? 'row' : 'rows'}${people !== total ? ` (${people} unique people)` : ''}${sumVal} · ${$('#rangeLabel').textContent}${PII ? '' : ' · contact details locked'}`;
   drawList();
@@ -289,7 +295,7 @@ function openSpend(title) {
   }
   const total = rows.reduce((s, r) => s + r.inRange, 0);
   $('#mTitle').textContent = title; $('#mSub').textContent = `${$('#rangeLabel').textContent} · ${money(total)} in these dates`;
-  $('#mBody').innerHTML = `<div class="tablewrap"><table class="grid"><thead><tr><th>Month</th><th>Lead source</th><th class="num">Monthly budget</th><th class="num">Counted in these dates</th></tr></thead><tbody>${rows.length ? rows.map(r => `<tr><td>${esc(r.label)}</td><td>${esc(r.source)}</td><td class="num">${money(r.amount)}</td><td class="num">${money(r.inRange)}</td></tr>`).join('') : '<tr><td class="empty" colspan="4">No spend entered for these dates.</td></tr>'}</tbody></table></div>
+  $('#mBody').innerHTML = `<div class="tablewrap"><table class="grid"><thead><tr><th>Month</th><th>Lead source</th><th class="num">Amount</th><th class="num">Counted in these dates</th></tr></thead><tbody>${rows.length ? rows.map(r => `<tr><td>${esc(r.label)}</td><td>${esc(r.source)}${r.invoice ? ` <span class="muted small">· invoice ${esc(r.invoice)}${r.vendor ? ', ' + esc(r.vendor) : ''}</span>` : ''}</td><td class="num">${money(r.amount)}</td><td class="num">${money(r.inRange)}</td></tr>`).join('') : '<tr><td class="empty" colspan="4">No spend entered for these dates.</td></tr>'}</tbody></table></div>
     <p class="muted small">Monthly spend is spread evenly over the month’s days. ${CONFIG.spendSheetUrl ? `<a href="${esc(CONFIG.spendSheetUrl)}" target="_blank" rel="noopener">Open the ad spend sheet →</a>` : ''}</p>`;
   $('#modal').showModal();
 }

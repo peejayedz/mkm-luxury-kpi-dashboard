@@ -23,6 +23,8 @@ export const CONFIG = {
   hiddenReps: ['mHyQQ2PAwUU1GD8T3APS', 'tbRLBAsNTVfjZ2UdHoGR'],
   // Monthly ad spend sheet (Month | Lead source | Amount). Read by the sync; linked from the Ad spend list.
   spendSheetUrl: '',
+  // v3h: Bot Log sheet tabs (the sheet link itself is the repo secret BOTLOG_SHEET_URL).
+  botLog: { offersGid: 0, costsGid: 1 },
   // GHL form for logging an MLS offer by hand. Shows the "+ Log MLS offer" button when set.
   mlsOfferFormUrl: '',
   // Ann's working hours (account time zone). Speed to lead only counts minutes inside these.

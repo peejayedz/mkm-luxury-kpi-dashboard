@@ -32,6 +32,7 @@ jobs:
           GHL_TOKEN: ${{ secrets.GHL_TOKEN }}
           DASHBOARD_PASSPHRASE: ${{ secrets.DASHBOARD_PASSPHRASE }}
           SPEND_CSV_URL: ${{ secrets.SPEND_CSV_URL }}
+          BOTLOG_SHEET_URL: ${{ secrets.BOTLOG_SHEET_URL }}
         run: node sync.mjs
       - name: Build report numbers (no names or spend)
         run: |

@@ -6,9 +6,9 @@
     "from_ms": 1794978000000,
     "to_ms": 1795582800000
   },
-  "computed_at_ms": 1795648534780,
-  "generated_at_ms": 1795648534677,
-  "data_as_of": "Nov 25, 2026, 6:15 PM",
+  "computed_at_ms": 1795648584306,
+  "generated_at_ms": 1795648584203,
+  "data_as_of": "Nov 25, 2026, 6:16 PM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
@@ -80,10 +80,16 @@
     }
   },
   "mls_offers_lois": {
-    "sent": 0,
+    "sent": 5,
     "prev_period": 0,
-    "by_status": {},
-    "open_now": {},
+    "by_status": {
+      "Sent": 4,
+      "Countered": 1
+    },
+    "open_now": {
+      "Sent": 6,
+      "Countered": 1
+    },
     "list": "locked (no passphrase)"
   },
   "pipeline_now": {
@@ -112,6 +118,7 @@
   "missed_calls": [],
   "dashboard_summary": {
     "going_well": [
+      "5 MLS offers (LOIs) were sent.",
       "1 junk or repeat call was kept out of the numbers."
     ],
     "needs_attention": [

@@ -6,16 +6,16 @@
     "from_ms": 1795064400000,
     "to_ms": 1795669200000
   },
-  "computed_at_ms": 1795703367671,
-  "generated_at_ms": 1795703367571,
-  "data_as_of": "Nov 26, 2026, 9:29 AM",
+  "computed_at_ms": 1795710277910,
+  "generated_at_ms": 1795710277783,
+  "data_as_of": "Nov 26, 2026, 11:24 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
     "new": 0,
     "prev_period": 2,
     "by_source": {},
-    "not_counted": 1
+    "not_counted": 0
   },
   "speed": {
     "avg_business_min": {
@@ -95,7 +95,7 @@
   "pipeline_now": {
     "engaged": 3,
     "warm": 2,
-    "offer_out_perfect_presentation": 0,
+    "offer_out_perfect_presentation": 1,
     "under_contract": 0
   },
   "voice_ai": {
@@ -107,19 +107,11 @@
   },
   "money": "locked (no passphrase)",
   "lead_list": [],
-  "not_counted_list": [
-    {
-      "name": null,
-      "source": "M Software",
-      "reason": "Spam / not a seller",
-      "came_in": "Mon 1:28 AM"
-    }
-  ],
+  "not_counted_list": [],
   "missed_calls": [],
   "dashboard_summary": {
     "going_well": [
-      "7 MLS offers (LOIs) were sent.",
-      "1 junk or repeat call was kept out of the numbers."
+      "7 MLS offers (LOIs) were sent."
     ],
     "needs_attention": [
       "No new leads came in during these dates."

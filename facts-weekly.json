@@ -1,14 +1,14 @@
 {
   "period": {
     "mode": "weekly",
-    "label": "Nov 18, 2026 – Nov 24, 2026",
+    "label": "Nov 19, 2026 – Nov 25, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1794978000000,
-    "to_ms": 1795582800000
+    "from_ms": 1795064400000,
+    "to_ms": 1795669200000
   },
-  "computed_at_ms": 1795667300851,
-  "generated_at_ms": 1795667300763,
-  "data_as_of": "Nov 25, 2026, 11:28 PM",
+  "computed_at_ms": 1795703367671,
+  "generated_at_ms": 1795703367571,
+  "data_as_of": "Nov 26, 2026, 9:29 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
@@ -80,10 +80,10 @@
     }
   },
   "mls_offers_lois": {
-    "sent": 5,
+    "sent": 7,
     "prev_period": 0,
     "by_status": {
-      "Sent": 4,
+      "Sent": 6,
       "Countered": 1
     },
     "open_now": {
@@ -118,7 +118,7 @@
   "missed_calls": [],
   "dashboard_summary": {
     "going_well": [
-      "5 MLS offers (LOIs) were sent.",
+      "7 MLS offers (LOIs) were sent.",
       "1 junk or repeat call was kept out of the numbers."
     ],
     "needs_attention": [

@@ -1,14 +1,14 @@
 {
   "period": {
     "mode": "daily",
-    "label": "Nov 24, 2026",
+    "label": "Nov 25, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1795496400000,
-    "to_ms": 1795582800000
+    "from_ms": 1795582800000,
+    "to_ms": 1795669200000
   },
-  "computed_at_ms": 1795667300813,
-  "generated_at_ms": 1795667300763,
-  "data_as_of": "Nov 25, 2026, 11:28 PM",
+  "computed_at_ms": 1795703367626,
+  "generated_at_ms": 1795703367571,
+  "data_as_of": "Nov 26, 2026, 9:29 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
@@ -80,11 +80,10 @@
     }
   },
   "mls_offers_lois": {
-    "sent": 5,
-    "prev_period": 0,
+    "sent": 2,
+    "prev_period": 5,
     "by_status": {
-      "Sent": 4,
-      "Countered": 1
+      "Sent": 2
     },
     "open_now": {
       "Sent": 6,
@@ -99,11 +98,11 @@
     "under_contract": 0
   },
   "voice_ai": {
-    "calls": 1,
-    "transferred": 1,
+    "calls": 0,
+    "transferred": 0,
     "booked": 0,
     "became_lead": 0,
-    "under_30s": 1
+    "under_30s": 0
   },
   "money": "locked (no passphrase)",
   "lead_list": [],
@@ -111,7 +110,7 @@
   "missed_calls": [],
   "dashboard_summary": {
     "going_well": [
-      "5 MLS offers (LOIs) were sent."
+      "2 MLS offers (LOIs) were sent."
     ],
     "needs_attention": [
       "No new leads came in during these dates."

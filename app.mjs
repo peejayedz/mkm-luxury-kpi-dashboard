@@ -1,5 +1,5 @@
-import { CONFIG } from './config.mjs?v=v3h';
-import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, executiveSummary, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v3h';
+import { CONFIG } from './config.mjs?v=v3i';
+import { OTHER_REP, SOURCES, prepare, attachMoney, spendInRange, computeAll, sourceScorecard, repScorecard, funnel, executiveSummary, sources, presetRange, customRange, previousRange, fmtDate, todayParts } from './kpi-core.mjs?v=v3i';
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -196,7 +196,8 @@ function spendMissingNote() {
   if (!P.money) return null; // locked: can't see the sheet rows
   const t = todayParts(tz()); const y = t.m === 1 ? t.y - 1 : t.y, m = t.m === 1 ? 12 : t.m - 1;
   const key = `${y}-${String(m).padStart(2, '0')}`;
-  const need = st.source === 'all' ? ['PPC', 'Mailers', 'M Software'] : [st.source];
+  // v3i: a source isn't flagged for months before it started (Mailers and M Software began Nov 2026)
+  const need = (st.source === 'all' ? ['PPC', 'Mailers', 'M Software'] : [st.source]).filter(src => !CONFIG.spendStartMonth?.[src] || key >= CONFIG.spendStartMonth[src]);
   const missing = need.filter(src => !(P.money.spend || []).some(r => r.month === key && r.source === src));
   return missing.length ? `${MONTHS[m - 1]} ad spend hasn’t been entered for ${missing.join(', ')} yet.` : null;
 }

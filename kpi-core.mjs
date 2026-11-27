@@ -146,6 +146,13 @@ export function prepare(data, opts = {}) {
       calls: (data.calls || []).map(c => ({ ...c, userId: m(c.userId) })),
       appointments: (data.appointments || []).map(a => ({ ...a, assignedTo: m(a.assignedTo) })) };
   }
+  // v3j: team members' own phones are tests, never leads or calls.
+  const team = opts.teamContacts || {};
+  const isTeam = id => !!(id && Object.prototype.hasOwnProperty.call(team, id));
+  data = { ...data,
+    calls: (data.calls || []).filter(c => !isTeam(c.contactId)),
+    voiceCalls: (data.voiceCalls || []).filter(v => !isTeam(v.contactId)),
+    appointments: (data.appointments || []).filter(a => !isTeam(a.contactId)) };
   const stageById = {}, pipeById = {};
   for (const p of data.pipelines) { pipeById[p.id] = p; for (const s of p.stages) stageById[s.id] = { ...s, pipelineId: p.id, pipelineName: p.name, rank: stageRank(s.name) }; }
   const userById = Object.fromEntries(data.users.map(u => [u.id, u]));
@@ -192,7 +199,7 @@ export function prepare(data, opts = {}) {
     const stlBiz = bookedFirst || skipStl ? null : calledInFirst ? 0 : l.firstDialAt ? businessMinutes(t0, l.firstDialAt, tz, hours) : null;
     const stlRaw = bookedFirst || skipStl ? null : calledInFirst ? 0 : l.firstDialAt ? Math.max(0, Math.round((l.firstDialAt - t0) / 60000)) : null;
     const exTag = tags.find(t => excludeTags.includes(t));
-    const excluded = exTag ? (/repeat|duplicate/.test(exTag) ? 'Repeat caller' : 'Spam / not a seller')
+    const excluded = isTeam(l.contactId) ? 'Team test' : exTag ? (/repeat|duplicate/.test(exTag) ? 'Repeat caller' : 'Spam / not a seller')
       : l.contactId && firstLeadOfContact[l.contactId] !== l.id ? 'Repeat caller' : null;
     return { ...l, tags, source, stageName: st.name, pipelineName, rank, won, contract: contract || contractSent, offered,
       t0, afterHours, bookedFirst, skipStl, stlBiz, stlRaw, excluded, contractSent,
@@ -442,7 +449,7 @@ export function executiveSummary(tiles, fun, ctx = {}) {
     else { perf.push({ text: `${g.label} is ${fmtN(t.value, g.unit)}${counts} vs the ${goalTxt(g)} goal.${worst?.k === g.k ? ' This is the biggest drop-off in the funnel.' : ''}`, tile: g.k }); addFocus(g.focus); }
   }
   if (tiles.lois?.value) good.push({ text: `${tiles.lois.value} MLS offer${tiles.lois.value > 1 ? 's (LOIs) were' : ' (LOI) was'} sent.`, tile: 'lois' });
-  if (tiles.excluded?.value) good.push({ text: `${tiles.excluded.value} junk or repeat call${tiles.excluded.value > 1 ? 's were' : ' was'} kept out of the numbers.`, tile: 'excluded' });
+  if (tiles.excluded?.value) { const n = tiles.excluded.value, tt = tiles.excluded.rows.filter(r => r.excluded === 'Team test').length, j = n - tt; const parts = [j ? `${j} junk or repeat call${j > 1 ? 's' : ''}` : '', tt ? `${tt} team test${tt > 1 ? 's' : ''}` : ''].filter(Boolean); good.push({ text: `${parts.join(' and ')} ${n > 1 ? 'were' : 'was'} kept out of the numbers.`, tile: 'excluded' }); }
   const unknown = (tiles.newLeads.rows || []).filter(l => l.source === 'Unknown').length;
   if (unknown) { data.push({ text: unknown > 1 ? `${unknown} leads have no source tag, so they don’t show under any lead source.` : '1 lead has no source tag, so it doesn’t show under any lead source.', tile: 'newLeads' }); addFocus('Tag every new lead with its source (ppc, mailers, mls, drive by, referral, outbound, m software).'); }
   if (ctx.spendMissing) { data.push({ text: ctx.spendMissing }); addFocus('Ann: add each month’s spend for PPC, Mailers and M Software so cost per lead and ROAS fill in.'); }

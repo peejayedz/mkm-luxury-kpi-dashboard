@@ -33,6 +33,12 @@ export const CONFIG = {
   // Name used in the Executive summary's recommended focus when no rep is picked.
   mainRepName: 'Ann',
   businessHours: { days: [1, 2, 3, 4, 5], start: '09:00', end: '18:00' },
+  // v3j: team members' own phones (GHL contact IDs, no phone numbers here). Their test texts/calls are
+  // "Team test": left out of leads, speed to lead, contact ratio, calls, AI calls and appointments.
+  // Nothing is tagged in GHL, so they can keep testing. Add a contact ID to add a phone.
+  teamContacts: {
+    'd74CAmivajaXCJzEs5wG': 'Ann (test phone)',
+  },
   // Leads with any of these tags are left out of every lead number ("Not counted").
   excludeTags: ['spam', 'not-a-seller', 'repeat-caller', 'duplicate'],
   sourceAliases: {

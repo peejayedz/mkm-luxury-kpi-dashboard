@@ -4,7 +4,7 @@ import { CONFIG } from '../config.mjs';
 
 const RAW = JSON.parse(fs.readFileSync(new URL('../data.json', import.meta.url), 'utf8'));
 const tz = RAW.timezone || CONFIG.timezoneFallback;
-const P = prepare(RAW, { hiddenReps: CONFIG.hiddenReps, businessHours: CONFIG.businessHours, excludeTags: CONFIG.excludeTags });
+const P = prepare(RAW, { hiddenReps: CONFIG.hiddenReps, businessHours: CONFIG.businessHours, excludeTags: CONFIG.excludeTags, teamContacts: CONFIG.teamContacts });
 
 // Optional: names and ad spend need the team passphrase (env MKM_PASSPHRASE). Without it the report has no names or spend.
 let pii = null;

@@ -6,9 +6,9 @@
     "from_ms": 1795150800000,
     "to_ms": 1795755600000
   },
-  "computed_at_ms": 1795756228177,
-  "generated_at_ms": 1795756228078,
-  "data_as_of": "Nov 27, 2026, 12:10 AM",
+  "computed_at_ms": 1795792863040,
+  "generated_at_ms": 1795792862950,
+  "data_as_of": "Nov 27, 2026, 10:21 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
@@ -86,11 +86,12 @@
     "sent": 7,
     "prev_period": 0,
     "by_status": {
-      "Sent": 6,
+      "Sent": 5,
+      "Dead": 1,
       "Countered": 1
     },
     "open_now": {
-      "Sent": 6,
+      "Sent": 5,
       "Countered": 1
     },
     "list": "locked (no passphrase)"

@@ -1,20 +1,23 @@
 {
   "period": {
     "mode": "weekly",
-    "label": "Nov 19, 2026 – Nov 25, 2026",
+    "label": "Nov 20, 2026 – Nov 26, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1795064400000,
-    "to_ms": 1795669200000
+    "from_ms": 1795150800000,
+    "to_ms": 1795755600000
   },
-  "computed_at_ms": 1795735131880,
-  "generated_at_ms": 1795735131755,
-  "data_as_of": "Nov 26, 2026, 6:18 PM",
+  "computed_at_ms": 1795756228177,
+  "generated_at_ms": 1795756228078,
+  "data_as_of": "Nov 27, 2026, 12:10 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
-    "new": 0,
+    "new": 3,
     "prev_period": 2,
-    "by_source": {},
+    "by_source": {
+      "PPC": 1,
+      "Mailers": 2
+    },
     "not_counted": 0
   },
   "speed": {
@@ -29,7 +32,7 @@
       "num": 0,
       "den": 0
     },
-    "not_called_yet": 0,
+    "not_called_yet": 3,
     "waited_30_plus": 0,
     "after_hours_leads": 0,
     "after_hours_avg_min_from_9am": {
@@ -38,11 +41,11 @@
   },
   "contact": {
     "contact_ratio_pct": {
-      "value": null,
-      "num": 0,
-      "den": 0
+      "value": 100,
+      "num": 3,
+      "den": 3
     },
-    "reached": 0
+    "reached": 3
   },
   "calls": {
     "dials": 0,
@@ -64,19 +67,19 @@
     }
   },
   "sales_from_these_leads": {
-    "offers": 0,
+    "offers": 1,
     "contracts": 0,
     "closed": 0,
     "dead": 0,
     "contact_to_offer_pct": {
-      "value": null,
-      "num": 0,
-      "den": 0
+      "value": 33.3,
+      "num": 1,
+      "den": 3
     },
     "offer_to_contract_pct": {
-      "value": null,
+      "value": 0,
       "num": 0,
-      "den": 0
+      "den": 1
     }
   },
   "mls_offers_lois": {
@@ -106,18 +109,78 @@
     "under_30s": 1
   },
   "money": "locked (no passphrase)",
-  "lead_list": [],
+  "lead_list": [
+    {
+      "name": null,
+      "source": "Mailers",
+      "came_in": "Thu 10:46 AM",
+      "came_in_by_call": false,
+      "after_hours": false,
+      "called_in_biz_min": null,
+      "booked_before_call": false,
+      "not_called_yet": true,
+      "dials": 0,
+      "reached": true,
+      "how_reached": null,
+      "stage": "Perfect Presentation",
+      "offer_made": true,
+      "under_contract": false,
+      "closed": false,
+      "owner": "Annemarie Lee"
+    },
+    {
+      "name": null,
+      "source": "Mailers",
+      "came_in": "Thu 4:22 PM",
+      "came_in_by_call": false,
+      "after_hours": false,
+      "called_in_biz_min": null,
+      "booked_before_call": false,
+      "not_called_yet": true,
+      "dials": 0,
+      "reached": true,
+      "how_reached": "SMS reply",
+      "stage": "Not Engaged",
+      "offer_made": false,
+      "under_contract": false,
+      "closed": false,
+      "owner": "Annemarie Lee"
+    },
+    {
+      "name": null,
+      "source": "PPC",
+      "came_in": "Thu 4:28 PM",
+      "came_in_by_call": false,
+      "after_hours": false,
+      "called_in_biz_min": null,
+      "booked_before_call": false,
+      "not_called_yet": true,
+      "dials": 0,
+      "reached": true,
+      "how_reached": "SMS reply",
+      "stage": "Not Engaged",
+      "offer_made": false,
+      "under_contract": false,
+      "closed": false,
+      "owner": "Annemarie Lee"
+    }
+  ],
   "not_counted_list": [],
   "missed_calls": [],
   "dashboard_summary": {
     "going_well": [
+      "Contact ratio is 100% (3 of 3), well ahead of the 80% goal.",
       "7 MLS offers (LOIs) were sent."
     ],
     "needs_attention": [
-      "No new leads came in during these dates."
+      "3 new leads haven’t been called yet.",
+      "Contact → offer is 33.3% (1 of 3) vs the 40% goal. This is the biggest drop-off in the funnel.",
+      "Offer → contract is 0% (0 of 1) vs the 25% goal."
     ],
     "focus": [
-      "Check lead flow: every new seller who calls in should get an opportunity in the Seller Leads pipeline."
+      "Call the 3 new leads that haven’t been called yet.",
+      "Make an offer to every qualified seller you talk to, and tag it offer-made.",
+      "Follow up on every open offer within 24 hours to get it under contract."
     ]
   },
   "warnings": []

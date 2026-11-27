@@ -6,19 +6,18 @@
     "from_ms": 1795150800000,
     "to_ms": 1795755600000
   },
-  "computed_at_ms": 1795813915169,
-  "generated_at_ms": 1795813915063,
-  "data_as_of": "Nov 27, 2026, 4:11 PM",
+  "computed_at_ms": 1795813946022,
+  "generated_at_ms": 1795813945898,
+  "data_as_of": "Nov 27, 2026, 4:12 PM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
-    "new": 3,
+    "new": 2,
     "prev_period": 2,
     "by_source": {
-      "PPC": 1,
       "Mailers": 2
     },
-    "not_counted": 0
+    "not_counted": 1
   },
   "speed": {
     "avg_business_min": {
@@ -32,7 +31,7 @@
       "num": 0,
       "den": 0
     },
-    "not_called_yet": 3,
+    "not_called_yet": 2,
     "waited_30_plus": 0,
     "after_hours_leads": 0,
     "after_hours_avg_min_from_9am": {
@@ -42,10 +41,10 @@
   "contact": {
     "contact_ratio_pct": {
       "value": 100,
-      "num": 3,
-      "den": 3
+      "num": 2,
+      "den": 2
     },
-    "reached": 3
+    "reached": 2
   },
   "calls": {
     "dials": 0,
@@ -72,9 +71,9 @@
     "closed": 0,
     "dead": 0,
     "contact_to_offer_pct": {
-      "value": 33.3,
+      "value": 50,
       "num": 1,
-      "den": 3
+      "den": 2
     },
     "offer_to_contract_pct": {
       "value": 0,
@@ -146,41 +145,30 @@
       "under_contract": false,
       "closed": false,
       "owner": "Annemarie Lee"
-    },
+    }
+  ],
+  "not_counted_list": [
     {
       "name": null,
       "source": "PPC",
-      "came_in": "Thu 4:28 PM",
-      "came_in_by_call": false,
-      "after_hours": false,
-      "called_in_biz_min": null,
-      "booked_before_call": false,
-      "not_called_yet": true,
-      "dials": 0,
-      "reached": true,
-      "how_reached": "SMS reply",
-      "stage": "Not Engaged",
-      "offer_made": false,
-      "under_contract": false,
-      "closed": false,
-      "owner": "Annemarie Lee"
+      "reason": "Team test",
+      "came_in": "Thu 4:28 PM"
     }
   ],
-  "not_counted_list": [],
   "missed_calls": [],
   "dashboard_summary": {
     "going_well": [
-      "Contact ratio is 100% (3 of 3), well ahead of the 80% goal.",
-      "7 MLS offers (LOIs) were sent."
+      "Contact ratio is 100% (2 of 2), well ahead of the 80% goal.",
+      "Contact → offer is 50% (1 of 2), well ahead of the 40% goal.",
+      "7 MLS offers (LOIs) were sent.",
+      "1 team test was kept out of the numbers."
     ],
     "needs_attention": [
-      "3 new leads haven’t been called yet.",
-      "Contact → offer is 33.3% (1 of 3) vs the 40% goal. This is the biggest drop-off in the funnel.",
+      "2 new leads haven’t been called yet.",
       "Offer → contract is 0% (0 of 1) vs the 25% goal."
     ],
     "focus": [
-      "Call the 3 new leads that haven’t been called yet.",
-      "Make an offer to every qualified seller you talk to, and tag it offer-made.",
+      "Call the 2 new leads that haven’t been called yet.",
       "Follow up on every open offer within 24 hours to get it under contract."
     ]
   },

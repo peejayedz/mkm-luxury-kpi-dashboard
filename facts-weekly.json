@@ -1,14 +1,14 @@
 {
   "period": {
     "mode": "weekly",
-    "label": "Nov 20, 2026 – Nov 26, 2026",
+    "label": "Nov 21, 2026 – Nov 27, 2026",
     "timezone": "US/Eastern",
-    "from_ms": 1795150800000,
-    "to_ms": 1795755600000
+    "from_ms": 1795237200000,
+    "to_ms": 1795842000000
   },
-  "computed_at_ms": 1795841883986,
-  "generated_at_ms": 1795841883886,
-  "data_as_of": "Nov 27, 2026, 11:58 PM",
+  "computed_at_ms": 1795874536506,
+  "generated_at_ms": 1795874536415,
+  "data_as_of": "Nov 28, 2026, 9:02 AM",
   "data_age_hours": 0,
   "names_and_spend_unlocked": false,
   "leads": {
@@ -82,11 +82,12 @@
     }
   },
   "mls_offers_lois": {
-    "sent": 7,
+    "sent": 10,
     "prev_period": 0,
     "by_status": {
+      "Rejected": 1,
       "Sent": 5,
-      "Dead": 1,
+      "Dead": 3,
       "Countered": 1
     },
     "open_now": {
@@ -160,7 +161,7 @@
     "going_well": [
       "Contact ratio is 100% (2 of 2), well ahead of the 80% goal.",
       "Contact → offer is 50% (1 of 2), well ahead of the 40% goal.",
-      "7 MLS offers (LOIs) were sent.",
+      "10 MLS offers (LOIs) were sent.",
       "1 team test was kept out of the numbers."
     ],
     "needs_attention": [
